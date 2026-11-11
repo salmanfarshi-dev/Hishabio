@@ -1,4 +1,3 @@
-
 /* ====================
    Hishabio Translations
    ==================== */
@@ -19,8 +18,7 @@ const translations = {
       "Manage shared expenses, split bills fairly, and keep track of who owes whom. Make group expenses simple, transparent, and stress-free with Hishabio.",
     exploreFeatures: "Explore Features",
     howItWorksButton: "How It Works",
-    heroNote:
-      "Simple expense tracking for roommates, families and friends.",
+    heroNote: "Simple expense tracking for roommates, families and friends.",
 
     featureBadge: "Powerful Features",
     featureTitle: "Everything You Need to",
@@ -90,12 +88,78 @@ const translations = {
     stayConnected: "Stay Connected",
     footerDescription:
       "Share expenses, simplify life. Manage group expenses, split bills fairly and keep every calculation organized.",
-    footerUpdates:
-      "Get updates about new features and improvements.",
+    footerUpdates: "Get updates about new features and improvements.",
     joinHishabio: "Join Hishabio",
     forgotPassword: "Forgot Password",
     copyright: "All rights reserved.",
-    tagline: "Share Expenses. Simplify Life."
+    tagline: "Share Expenses. Simplify Life.",
+
+    // Login Page
+    welcomeBack: "Welcome Back!",
+    loginSubtitle: "Sign in to continue managing your shared expenses.",
+    emailAddress: "Email Address",
+    enterEmail: "Enter your email address",
+    password: "Password",
+    enterPassword: "Enter your password",
+    rememberMe: "Remember me",
+    forgotPassword: "Forgot Password?",
+    loginButton: "Sign In",
+    noAccount: "Don't have an account?",
+    createAccount: "Create Account",
+    orContinueWith: "Or continue with",
+    secureLogin: "Your information is safe and secure.",
+
+    // Register Page
+    createYourAccount: "Create Your Account",
+    registerSubtitle: "Join Hishabio and make shared expenses easier.",
+    fullName: "Full Name",
+    enterFullName: "Enter your full name",
+    confirmPassword: "Confirm Password",
+    enterConfirmPassword: "Re-enter your password",
+    agreeTerms: "I agree to the",
+    termsConditions: "Terms & Conditions",
+    and: "and",
+    privacyPolicy: "Privacy Policy",
+    alreadyAccount: "Already have an account?",
+    signIn: "Sign In",
+    registerButton: "Create Account",
+    passwordHint: "Password must be at least 6 characters.",
+
+    // Forgot Password Page
+    forgotPasswordTitle: "Forgot Your Password?",
+    forgotPasswordSubtitle:
+      "No worries! Enter your email address and we'll send you a password reset link.",
+    sendResetLink: "Send Reset Link",
+    sending: "Sending...",
+    backToLogin: "Back to Login",
+    rememberPassword: "Remember your password?",
+    resetEmailSent: "Password reset instructions have been sent to your email.",
+    checkEmail: "Please check your inbox.",
+
+    // Dashboard
+    dashboard: "Dashboard",
+    overview: "Overview",
+    expenses: "Expenses",
+    balances: "Balances",
+    settlements: "Settlements",
+    members: "Members",
+    reports: "Reports",
+    settings: "Settings",
+    logout: "Logout",
+    totalExpenses: "Total Expenses",
+    yourShare: "Your Share",
+    youPaid: "You Paid",
+    yourBalance: "Your Balance",
+    recentExpenses: "Recent Expenses",
+    viewAll: "View All",
+    monthlyOverview: "Monthly Expense Overview",
+    quickActions: "Quick Actions",
+    addExpense: "Add Expense",
+    viewBalances: "View Balances",
+    thisMonth: "This Month",
+    welcome: "Welcome back!",
+    dashboardSubtitle: "Here's what's happening with your shared expenses.",
+    noExpenses: "No expenses yet",
   },
 
   bn: {
@@ -113,8 +177,7 @@ const translations = {
       "যৌথ খরচের হিসাব রাখুন, ন্যায্যভাবে বিল ভাগ করুন এবং কে কার কাছে কত টাকা পাবে তা সহজেই জানুন। Hishabio-এর মাধ্যমে গ্রুপের খরচ ব্যবস্থাপনা করুন সহজে ও স্বচ্ছভাবে।",
     exploreFeatures: "ফিচার দেখুন",
     howItWorksButton: "যেভাবে কাজ করে",
-    heroNote:
-      "রুমমেট, পরিবার ও বন্ধুদের যৌথ খরচের সহজ হিসাব।",
+    heroNote: "রুমমেট, পরিবার ও বন্ধুদের যৌথ খরচের সহজ হিসাব।",
 
     featureBadge: "দারুণ সব ফিচার",
     featureTitle: "যৌথ খরচ ব্যবস্থাপনায়",
@@ -184,13 +247,78 @@ const translations = {
     stayConnected: "যোগাযোগ রাখুন",
     footerDescription:
       "খরচ ভাগ করুন, জীবন সহজ করুন। গ্রুপের খরচ পরিচালনা করুন, ন্যায্যভাবে বিল ভাগ করুন এবং সব হিসাব গুছিয়ে রাখুন।",
-    footerUpdates:
-      "নতুন ফিচার ও আপডেট সম্পর্কে জানতে আমাদের সঙ্গে থাকুন।",
+    footerUpdates: "নতুন ফিচার ও আপডেট সম্পর্কে জানতে আমাদের সঙ্গে থাকুন।",
     joinHishabio: "Hishabio-তে যোগ দিন",
     forgotPassword: "পাসওয়ার্ড ভুলে গেছেন?",
     copyright: "সর্বস্বত্ব সংরক্ষিত।",
-    tagline: "খরচ ভাগ করুন। জীবন সহজ করুন।"
-  }
+    tagline: "খরচ ভাগ করুন। জীবন সহজ করুন।",
+
+    // Login Page
+    welcomeBack: "আবারও স্বাগতম!",
+    loginSubtitle: "আপনার যৌথ খরচ ব্যবস্থাপনা চালিয়ে যেতে লগইন করুন।",
+    emailAddress: "ইমেইল ঠিকানা",
+    enterEmail: "আপনার ইমেইল ঠিকানা লিখুন",
+    password: "পাসওয়ার্ড",
+    enterPassword: "আপনার পাসওয়ার্ড লিখুন",
+    rememberMe: "আমাকে মনে রাখুন",
+    forgotPassword: "পাসওয়ার্ড ভুলে গেছেন?",
+    loginButton: "লগইন করুন",
+    noAccount: "আপনার কি অ্যাকাউন্ট নেই?",
+    createAccount: "অ্যাকাউন্ট তৈরি করুন",
+    orContinueWith: "অথবা",
+    secureLogin: "আপনার তথ্য নিরাপদ ও সুরক্ষিত।",
+
+    // Register Page
+    createYourAccount: "আপনার অ্যাকাউন্ট তৈরি করুন",
+    registerSubtitle: "Hishabio-তে যোগ দিন এবং যৌথ খরচের হিসাব সহজ করুন।",
+    fullName: "পুরো নাম",
+    enterFullName: "আপনার পুরো নাম লিখুন",
+    confirmPassword: "পাসওয়ার্ড নিশ্চিত করুন",
+    enterConfirmPassword: "আবার আপনার পাসওয়ার্ড লিখুন",
+    agreeTerms: "আমি সম্মত হচ্ছি",
+    termsConditions: "শর্তাবলিতে",
+    and: "এবং",
+    privacyPolicy: "গোপনীয়তা নীতিতে",
+    alreadyAccount: "আগেই কি অ্যাকাউন্ট আছে?",
+    signIn: "লগইন করুন",
+    registerButton: "অ্যাকাউন্ট তৈরি করুন",
+    passwordHint: "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।",
+
+    // Forgot Password Page
+    forgotPasswordTitle: "পাসওয়ার্ড ভুলে গেছেন?",
+    forgotPasswordSubtitle:
+      "চিন্তার কিছু নেই! আপনার ইমেইল ঠিকানা দিন, আমরা পাসওয়ার্ড রিসেট করার লিংক পাঠাব।",
+    sendResetLink: "রিসেট লিংক পাঠান",
+    sending: "পাঠানো হচ্ছে...",
+    backToLogin: "লগইন পেজে ফিরে যান",
+    rememberPassword: "পাসওয়ার্ড মনে পড়েছে?",
+    resetEmailSent: "আপনার ইমেইলে পাসওয়ার্ড রিসেট করার নির্দেশনা পাঠানো হয়েছে।",
+    checkEmail: "আপনার ইমেইল ইনবক্স চেক করুন।",
+    // Dashboard
+    dashboard: "ড্যাশবোর্ড",
+    overview: "সংক্ষিপ্ত বিবরণ",
+    expenses: "খরচ",
+    balances: "ব্যালেন্স",
+    settlements: "লেনদেন নিষ্পত্তি",
+    members: "সদস্য",
+    reports: "রিপোর্ট",
+    settings: "সেটিংস",
+    logout: "লগআউট",
+    totalExpenses: "মোট খরচ",
+    yourShare: "আপনার অংশ",
+    youPaid: "আপনি দিয়েছেন",
+    yourBalance: "আপনার ব্যালেন্স",
+    recentExpenses: "সাম্প্রতিক খরচ",
+    viewAll: "সব দেখুন",
+    monthlyOverview: "মাসিক খরচের বিবরণ",
+    quickActions: "দ্রুত কাজ",
+    addExpense: "খরচ যোগ করুন",
+    viewBalances: "ব্যালেন্স দেখুন",
+    thisMonth: "এই মাস",
+    welcome: "আবারও স্বাগতম!",
+    dashboardSubtitle: "আপনার যৌথ খরচের সর্বশেষ হিসাব এখানে দেখুন।",
+    noExpenses: "এখনো কোনো খরচ নেই",
+  },
 };
 
 export default translations;
