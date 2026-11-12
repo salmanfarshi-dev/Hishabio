@@ -160,6 +160,28 @@ const translations = {
     welcome: "Welcome back!",
     dashboardSubtitle: "Here's what's happening with your shared expenses.",
     noExpenses: "No expenses yet",
+
+    // Recent Expenses
+    expenseTitle: "Expense Title",
+    category: "Category",
+    paidBy: "Paid By",
+    date: "Date",
+    amount: "Amount",
+    food: "Food",
+    transport: "Transport",
+    shopping: "Shopping",
+    utilities: "Utilities",
+    others: "Others",
+
+    // Monthly Expense Chart
+    monthlyExpenses: "Monthly Expenses",
+    expenseTrend: "Your expense activity over the months",
+
+    // Quick Actions
+    addNewExpense: "Add a New Expense",
+    addExpenseDescription: "Record a shared expense",
+    checkYourBalance: "Check Your Balance",
+    balanceDescription: "See who owes whom",
   },
 
   bn: {
@@ -318,6 +340,28 @@ const translations = {
     welcome: "আবারও স্বাগতম!",
     dashboardSubtitle: "আপনার যৌথ খরচের সর্বশেষ হিসাব এখানে দেখুন।",
     noExpenses: "এখনো কোনো খরচ নেই",
+
+    // Recent Expenses
+    expenseTitle: "খরচের বিবরণ",
+    category: "ক্যাটাগরি",
+    paidBy: "টাকা দিয়েছেন",
+    date: "তারিখ",
+    amount: "পরিমাণ",
+    food: "খাবার",
+    transport: "যাতায়াত",
+    shopping: "কেনাকাটা",
+    utilities: "বিল",
+    others: "অন্যান্য",
+
+    // Monthly Expense Chart
+    monthlyExpenses: "মাসিক খরচ",
+    expenseTrend: "মাস অনুযায়ী আপনার খরচের বিবরণ",
+
+    // Quick Actions
+    addNewExpense: "নতুন খরচ যোগ করুন",
+    addExpenseDescription: "যৌথ খরচের হিসাব লিখুন",
+    checkYourBalance: "আপনার ব্যালেন্স দেখুন",
+    balanceDescription: "কে কাকে কত টাকা দেবে দেখুন",
   },
 };
 

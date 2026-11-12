@@ -2,7 +2,10 @@ import { useState } from "react";
 import { FaBars, FaBell, FaGlobe } from "react-icons/fa";
 import { useLanguage } from "../context/LanguageContext";
 import Sidebar from "../components/dashboard/Sidebar";
-
+import StatsCards from "../components/dashboard/StatsCards";
+import RecentExpenses from "../components/dashboard/RecentExpenses";
+import ExpenseChart from "../components/dashboard/ExpenseChart";
+import QuickActions from "../components/dashboard/QuickActions";
 function Dashboard() {
   const [isOpen, setIsOpen] = useState(false);
   const { language, toggleLanguage, t } = useLanguage();
@@ -100,16 +103,34 @@ function Dashboard() {
               Dashboard Placeholder
               ==================== */}
 
-          <div className="card p-8 text-center">
-            <h3 className="text-xl font-heading font-bold text-heading mb-2">
-              {t("dashboard")}
-            </h3>
+          {/* ====================
+    Summary Cards
+    ==================== */}
 
-            <p className="text-muted">
-              {language === "bn"
-                ? "আপনার Dashboard প্রস্তুত হচ্ছে।"
-                : "Your dashboard is being prepared."}
-            </p>
+          <StatsCards />
+
+          {/* ====================
+    Recent Expenses
+    ==================== */}
+
+          <div className="mt-6">
+            <RecentExpenses />
+          </div>
+
+          {/* ====================
+    Monthly Expense Chart
+    ==================== */}
+
+          <div className="mt-6">
+            <ExpenseChart />
+          </div>
+
+          {/* ====================
+    Quick Actions
+    ==================== */}
+
+          <div className="mt-6">
+            <QuickActions />
           </div>
         </section>
       </main>
