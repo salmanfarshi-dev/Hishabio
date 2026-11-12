@@ -1,48 +1,57 @@
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
 import ForgotPassword from "./pages/ForgotPassword";
+
+import Dashboard from "./pages/Dashboard";
+import Expenses from "./pages/Expenses";
+import AddExpense from "./pages/AddExpense";
+import Balances from "./pages/Balances";
+import Settlements from "./pages/Settlements";
+import Members from "./pages/Members";
+import Reports from "./pages/Reports";
+import Settings from "./pages/Settings";
+import Profile from "./pages/Profile";
+
+import DashboardLayout from "./layouts/DashboardLayout";
+import ProtectedRoute from "./routes/ProtectedRoute";
+
 function App() {
   return (
     <>
+      <Toaster position="top-right" />
 
-     <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3000,
-          style: {
-            background: "#FFFFFF",
-            color: "#111827",
-            border: "1px solid #E2E8F0",
-            borderRadius: "12px",
-            fontFamily: "Inter, sans-serif",
-            fontSize: "14px",
-          },
-          success: {
-            iconTheme: {
-              primary: "#16A34A",
-              secondary: "#FFFFFF",
-            },
-          },
-          error: {
-            iconTheme: {
-              primary: "#DC2626",
-              secondary: "#FFFFFF",
-            },
-          },
-        }}
-      />
-    
-    <Routes>
-      <Route path="/" element={<Home />} />
-      <Route path="/login" element={<Login />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/forgot-password" element={<ForgotPassword />} />
-    </Routes>
+      <Routes>
+        {/* ====================
+            Public Routes
+            ==================== */}
+
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+
+        {/* ====================
+            Protected Routes
+            ==================== */}
+
+        <Route element={<ProtectedRoute />}>
+          <Route element={<DashboardLayout />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/expenses" element={<Expenses />} />
+            <Route path="/expenses/add" element={<AddExpense />} />
+            <Route path="/balances" element={<Balances />} />
+            <Route path="/settlements" element={<Settlements />} />
+            <Route path="/members" element={<Members />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<Profile />} />
+          </Route>
+        </Route>
+      </Routes>
     </>
   );
 }

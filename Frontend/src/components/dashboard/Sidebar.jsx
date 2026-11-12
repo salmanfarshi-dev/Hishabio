@@ -1,4 +1,4 @@
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link ,useNavigate} from "react-router-dom";
 import {
   FaThLarge,
   FaWallet,
@@ -11,9 +11,14 @@ import {
   FaTimes,
 } from "react-icons/fa";
 import { useLanguage } from "../../context/LanguageContext";
-
 function Sidebar({ isOpen, setIsOpen }) {
   const { t } = useLanguage();
+  const navigate = useNavigate();
+
+const handleLogout = () => {
+  localStorage.removeItem("hishabio-demo-auth");
+  navigate("/login");
+};
 
   const navItems = [
     { name: t("dashboard"), path: "/dashboard", icon: FaThLarge },
@@ -104,7 +109,7 @@ function Sidebar({ isOpen, setIsOpen }) {
 
         <div className="p-4 border-t border-border">
           <button
-            onClick={() => console.log("Logout clicked")}
+            onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-danger font-semibold text-sm hover:bg-red-50 transition"
           >
             <FaSignOutAlt size={17} />

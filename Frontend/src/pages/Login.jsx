@@ -9,10 +9,11 @@ import {
   FaArrowRight,
   FaShieldAlt,
 } from "react-icons/fa";
-
+import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
 
 function Login() {
+  const navigate = useNavigate();
   const { t } = useLanguage();
 
   const [showPassword, setShowPassword] = useState(false);
@@ -26,6 +27,10 @@ function Login() {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+    localStorage.setItem("hishabio-demo-auth", "true");
+
+    navigate("/dashboard");
 
     // Backend Authentication will be added later.
     console.log("Login form submitted");
