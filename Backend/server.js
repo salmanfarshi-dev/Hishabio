@@ -5,13 +5,16 @@ const authRoutes = require("./routes/authRoutes");
 const connectDB = require("./config/db");
 const householdRoutes = require("./routes/householdRoutes");
 const app = express();
-
+const expenseRoutes = require("./routes/expenseRoutes");
+const settlementRoutes = require("./routes/settlementRoutes");
 // Middleware
 
 app.use(cors());
 app.use(express.json());
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/households", householdRoutes);
+app.use("/api/v1/expenses", expenseRoutes);
+app.use("/api/v1/settlements", settlementRoutes);
 
 // Test Route
 
