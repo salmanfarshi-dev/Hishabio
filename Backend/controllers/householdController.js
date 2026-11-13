@@ -1,9 +1,7 @@
 const Household = require("../models/Household");
 const crypto = require("crypto");
 
-
 // Create Household
-
 
 const createHousehold = async (req, res) => {
   try {
@@ -48,4 +46,130 @@ const createHousehold = async (req, res) => {
   }
 };
 
-module.exports = { createHousehold };
+// ====================
+// Get My Households
+// ====================
+
+const getMyHouseholds = async (req, res) => {
+  try {
+    const households = await Household.find({
+      "members.user": req.user.id,
+    })
+      .populate("createdBy", "name email")
+      .populate("members.user", "name email profileImage")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      total: households.length,
+      households,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to get households",
+      error: error.message,
+    });
+  }
+};
+
+// ====================
+// Join Household
+// ====================
+
+const joinHousehold = async (req, res) => {
+  try {
+    const { inviteCode } = req.body;
+
+    // Check Invite Code
+    if (!inviteCode || !inviteCode.trim()) {
+      return res.status(400).json({
+        success: false,
+        message: "Invite code is required",
+      });
+    }
+
+    // Find Household
+    const household = await Household.findOne({
+      inviteCode: inviteCode.trim().toUpperCase(),
+    });
+
+    if (!household) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid invite code",
+      });
+    }
+
+    // Check Existing Member
+    const alreadyMember = household.members.some(
+      (member) => member.user.toString() === req.user.id,
+    );
+
+    if (alreadyMember) {
+      return res.status(409).json({
+        success: false,
+        message: "You are already a member of this household",
+      });
+    }
+
+    // Add New Member
+    household.members.push({
+      user: req.user.id,
+      role: "member",
+    });
+
+    await household.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Joined household successfully",
+      household,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to join household",
+      error: error.message,
+    });
+  }
+};
+
+const getHouseholdDetails = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find Household Only If User Is A Member
+    const household = await Household.findOne({
+      _id: id,
+      "members.user": req.user.id,
+    })
+      .populate("createdBy", "name email")
+      .populate("members.user", "name email profileImage");
+
+    if (!household) {
+      return res.status(404).json({
+        success: false,
+        message: "Household not found or you are not a member",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      household,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to get household details",
+      error: error.message,
+    });
+  }
+};
+
+module.exports = {
+  createHousehold,
+  getMyHouseholds,
+  joinHousehold,
+  getHouseholdDetails,
+};
