@@ -1,47 +1,132 @@
-import { FaUsers, FaUserPlus, FaEllipsisH, FaCrown } from "react-icons/fa";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  FaUsers,
+  FaUserPlus,
+  FaEllipsisH,
+  FaCrown,
+  FaCopy,
+} from "react-icons/fa";
 import { useLanguage } from "../context/LanguageContext";
+import API from "../api/axios";
+import toast from "react-hot-toast";
 
 function Members() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
-  const members = [
-    {
-      id: 1,
-      name: "Salman Farshi",
-      email: "salman@example.com",
-      role: "Admin",
-      paid: 5000,
-      share: 3125,
-      initials: "SF",
-    },
-    {
-      id: 2,
-      name: "Rahim Ahmed",
-      email: "rahim@example.com",
-      role: "Member",
-      paid: 4000,
-      share: 3125,
-      initials: "RA",
-    },
-    {
-      id: 3,
-      name: "Karim Hasan",
-      email: "karim@example.com",
-      role: "Member",
-      paid: 2000,
-      share: 3125,
-      initials: "KH",
-    },
-    {
-      id: 4,
-      name: "Hasan Mahmud",
-      email: "hasan@example.com",
-      role: "Member",
-      paid: 1500,
-      share: 3125,
-      initials: "HM",
-    },
-  ];
+  const [members, setMembers] = useState([]);
+  const [household, setHousehold] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // ====================
+  // Member Information
+  // ====================
+
+  const getMemberUser = (member) => member.user || member;
+
+  const getMemberId = (member) => {
+    const user = getMemberUser(member);
+    return user?._id || user?.id || "";
+  };
+
+  const getMemberName = (member) => {
+    const user = getMemberUser(member);
+    return user?.name || member.name || "Member";
+  };
+
+  const getMemberEmail = (member) => {
+    const user = getMemberUser(member);
+    return user?.email || member.email || "";
+  };
+
+  const getMemberImage = (member) => {
+    const user = getMemberUser(member);
+    return user?.profileImage || "";
+  };
+
+  const getMemberRole = (member) =>
+    String(member.role || "member").toLowerCase();
+
+  const getInitials = (name) =>
+    name
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0].toUpperCase())
+      .join("");
+
+  // ====================
+  // Fetch Members
+  // ====================
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const householdId = localStorage.getItem("hishabio-household-id");
+
+      if (!householdId) {
+        navigate("/household-setup", { replace: true });
+        return;
+      }
+
+      try {
+        setLoading(true);
+
+        const [membersResponse, householdResponse] = await Promise.all([
+          API.get(`/households/${householdId}/members`),
+          API.get(`/households/${householdId}`),
+        ]);
+
+        const memberList =
+          membersResponse.data.members || membersResponse.data.data || [];
+
+        const householdData =
+          householdResponse.data.household ||
+          householdResponse.data.data ||
+          householdResponse.data;
+
+        setMembers(memberList);
+        setHousehold(householdData);
+      } catch (error) {
+        console.error("Fetch Members Error:", error);
+
+        toast.error(error.response?.data?.message || "Failed to load members");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [navigate]);
+
+  // ====================
+  // Copy Invite Code
+  // ====================
+
+  const handleInvite = async () => {
+    if (!household?.inviteCode) {
+      toast.error("Invite code not available");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(household.inviteCode);
+      toast.success("Invite code copied!");
+    } catch (error) {
+      console.error("Copy Invite Code Error:", error);
+      toast.error("Could not copy invite code");
+    }
+  };
+
+  // ====================
+  // Admin Information
+  // ====================
+
+  const adminMember = members.find(
+    (member) => getMemberRole(member) === "admin",
+  );
+
+  const adminName = adminMember ? getMemberName(adminMember) : "Not available";
 
   return (
     <div className="space-y-6">
@@ -58,7 +143,7 @@ function Members() {
           <p className="text-sm text-muted mt-2">{t("membersSubtitle")}</p>
         </div>
 
-        <button className="btn-primary">
+        <button onClick={handleInvite} className="btn-primary">
           <FaUserPlus />
           {t("inviteMember")}
         </button>
@@ -76,7 +161,10 @@ function Members() {
 
           <div>
             <p className="text-sm text-muted">{t("totalMembers")}</p>
-            <h2 className="text-2xl font-heading font-bold text-heading">4</h2>
+
+            <h2 className="text-2xl font-heading font-bold text-heading">
+              {loading ? "..." : members.length}
+            </h2>
           </div>
         </div>
 
@@ -87,12 +175,46 @@ function Members() {
 
           <div>
             <p className="text-sm text-muted">{t("householdAdmin")}</p>
+
             <h2 className="text-lg font-heading font-bold text-heading">
-              Salman Farshi
+              {loading ? "..." : adminName}
             </h2>
           </div>
         </div>
       </div>
+
+      {/* ====================
+          Invite Code
+          ==================== */}
+
+      {household?.inviteCode && (
+        <div className="card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="font-heading font-bold text-heading">
+              Household Invite Code
+            </h3>
+
+            <p className="text-sm text-muted mt-1">
+              Share this code with people you want to invite.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <span className="px-4 py-2 rounded-lg bg-surface-hover text-primary font-bold tracking-wider">
+              {household.inviteCode}
+            </span>
+
+            <button
+              type="button"
+              onClick={handleInvite}
+              className="w-10 h-10 rounded-lg flex items-center justify-center bg-light-indigo text-primary hover:bg-surface-hover transition"
+              aria-label="Copy invite code"
+            >
+              <FaCopy />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ====================
           Members List
@@ -109,77 +231,96 @@ function Members() {
           </p>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[700px] text-left">
-            <thead className="bg-surface-hover text-muted text-sm">
-              <tr>
-                <th className="px-5 py-4 font-semibold">{t("member")}</th>
-                <th className="px-5 py-4 font-semibold">{t("role")}</th>
-                <th className="px-5 py-4 font-semibold">{t("paid")}</th>
-                <th className="px-5 py-4 font-semibold">{t("share")}</th>
-                <th className="px-5 py-4 font-semibold">{t("actions")}</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {members.map((member) => (
-                <tr
-                  key={member.id}
-                  className="border-t border-border hover:bg-surface-hover transition"
-                >
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-light-indigo text-primary flex items-center justify-center font-bold text-sm">
-                        {member.initials}
-                      </div>
-
-                      <div>
-                        <p className="font-semibold text-heading">
-                          {member.name}
-                        </p>
-
-                        <p className="text-xs text-muted mt-1">
-                          {member.email}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-
-                  <td className="px-5 py-4">
-                    <span
-                      className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${
-                        member.role === "Admin"
-                          ? "bg-light-indigo text-primary"
-                          : "bg-surface-hover text-text"
-                      }`}
-                    >
-                      {member.role === "Admin" && <FaCrown />}
-                      {member.role === "Admin" ? t("admin") : t("member")}
-                    </span>
-                  </td>
-
-                  <td className="px-5 py-4 text-text">
-                    ৳{member.paid.toLocaleString()}
-                  </td>
-
-                  <td className="px-5 py-4 text-text">
-                    ৳{member.share.toLocaleString()}
-                  </td>
-
-                  <td className="px-5 py-4">
-                    <button
-                      type="button"
-                      className="w-9 h-9 rounded-lg flex items-center justify-center text-muted hover:bg-surface-hover hover:text-heading transition"
-                      aria-label="Member actions"
-                    >
-                      <FaEllipsisH />
-                    </button>
-                  </td>
+        {loading ? (
+          <div className="p-12 text-center text-muted">Loading members...</div>
+        ) : members.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px] text-left">
+              <thead className="bg-surface-hover text-muted text-sm">
+                <tr>
+                  <th className="px-5 py-4 font-semibold">{t("member")}</th>
+                  <th className="px-5 py-4 font-semibold">{t("role")}</th>
+                  <th className="px-5 py-4 font-semibold">{t("paid")}</th>
+                  <th className="px-5 py-4 font-semibold">{t("share")}</th>
+                  <th className="px-5 py-4 font-semibold">{t("actions")}</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+
+              <tbody>
+                {members.map((member) => {
+                  const memberId = getMemberId(member);
+                  const name = getMemberName(member);
+                  const email = getMemberEmail(member);
+                  const image = getMemberImage(member);
+                  const role = getMemberRole(member);
+                  const isAdmin = role === "admin";
+
+                  return (
+                    <tr
+                      key={memberId}
+                      className="border-t border-border hover:bg-surface-hover transition"
+                    >
+                      <td className="px-5 py-4">
+                        <div className="flex items-center gap-3">
+                          {image ? (
+                            <img
+                              src={image}
+                              alt={name}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-light-indigo text-primary flex items-center justify-center font-bold text-sm">
+                              {getInitials(name)}
+                            </div>
+                          )}
+
+                          <div>
+                            <p className="font-semibold text-heading">{name}</p>
+
+                            <p className="text-xs text-muted mt-1">{email}</p>
+                          </div>
+                        </div>
+                      </td>
+
+                      <td className="px-5 py-4">
+                        <span
+                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${
+                            isAdmin
+                              ? "bg-light-indigo text-primary"
+                              : "bg-surface-hover text-text"
+                          }`}
+                        >
+                          {isAdmin && <FaCrown />}
+                          {isAdmin ? t("admin") : t("member")}
+                        </span>
+                      </td>
+
+                      <td className="px-5 py-4 text-muted">—</td>
+
+                      <td className="px-5 py-4 text-muted">—</td>
+
+                      <td className="px-5 py-4">
+                        <button
+                          type="button"
+                          onClick={handleInvite}
+                          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted hover:bg-surface-hover hover:text-heading transition"
+                          aria-label="Copy invite code"
+                          title="Copy invite code"
+                        >
+                          <FaEllipsisH />
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <div className="p-12 text-center text-muted">
+            No household members found.
+          </div>
+        )}
       </div>
     </div>
   );

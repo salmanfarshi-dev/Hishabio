@@ -601,7 +601,7 @@ const updateProfileImage = async (req, res) => {
         },
       );
 
-      Readable.from(req.file.buffer).pipe(uploadStream);
+      Readable.from([req.file.buffer]).pipe(uploadStream);
     });
 
     user.profileImage = uploadResult.secure_url;
@@ -620,6 +620,8 @@ const updateProfileImage = async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Profile Image Upload Error:", error);
+
     res.status(500).json({
       success: false,
       message: "Profile image upload failed",

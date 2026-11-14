@@ -1,13 +1,15 @@
+
 const Household = require("../models/Household");
 const crypto = require("crypto");
 
+// ====================
 // Create Household
+// ====================
 
 const createHousehold = async (req, res) => {
   try {
     const { name, description } = req.body;
 
-    // Check Household Name
     if (!name || !name.trim()) {
       return res.status(400).json({
         success: false,
@@ -15,10 +17,8 @@ const createHousehold = async (req, res) => {
       });
     }
 
-    // Generate Unique Invite Code
     const inviteCode = crypto.randomBytes(4).toString("hex").toUpperCase();
 
-    // Create Household
     const household = await Household.create({
       name: name.trim(),
       description: description || "",
@@ -81,7 +81,6 @@ const joinHousehold = async (req, res) => {
   try {
     const { inviteCode } = req.body;
 
-    // Check Invite Code
     if (!inviteCode || !inviteCode.trim()) {
       return res.status(400).json({
         success: false,
@@ -89,7 +88,6 @@ const joinHousehold = async (req, res) => {
       });
     }
 
-    // Find Household
     const household = await Household.findOne({
       inviteCode: inviteCode.trim().toUpperCase(),
     });
@@ -101,9 +99,8 @@ const joinHousehold = async (req, res) => {
       });
     }
 
-    // Check Existing Member
     const alreadyMember = household.members.some(
-      (member) => member.user.toString() === req.user.id,
+      (member) => member.user.toString() === req.user.id
     );
 
     if (alreadyMember) {
@@ -113,7 +110,6 @@ const joinHousehold = async (req, res) => {
       });
     }
 
-    // Add New Member
     household.members.push({
       user: req.user.id,
       role: "member",
@@ -135,11 +131,14 @@ const joinHousehold = async (req, res) => {
   }
 };
 
+// ====================
+// Get Household Details
+// ====================
+
 const getHouseholdDetails = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Find Household Only If User Is A Member
     const household = await Household.findOne({
       _id: id,
       "members.user": req.user.id,
@@ -175,7 +174,6 @@ const removeHouseholdMember = async (req, res) => {
   try {
     const { id, memberId } = req.params;
 
-    // Find household
     const household = await Household.findById(id);
 
     if (!household) {
@@ -185,7 +183,6 @@ const removeHouseholdMember = async (req, res) => {
       });
     }
 
-    // Check current user is an admin
     const currentMember = household.members.find(
       (member) => member.user.toString() === req.user.id
     );
@@ -197,7 +194,6 @@ const removeHouseholdMember = async (req, res) => {
       });
     }
 
-    // Prevent removing household creator
     if (household.createdBy.toString() === memberId) {
       return res.status(400).json({
         success: false,
@@ -205,7 +201,6 @@ const removeHouseholdMember = async (req, res) => {
       });
     }
 
-    // Prevent admin from removing themselves
     if (req.user.id === memberId) {
       return res.status(400).json({
         success: false,
@@ -213,7 +208,6 @@ const removeHouseholdMember = async (req, res) => {
       });
     }
 
-    // Check target member exists
     const memberExists = household.members.some(
       (member) => member.user.toString() === memberId
     );
@@ -225,7 +219,6 @@ const removeHouseholdMember = async (req, res) => {
       });
     }
 
-    // Remove member
     household.members = household.members.filter(
       (member) => member.user.toString() !== memberId
     );
@@ -253,7 +246,6 @@ const getHouseholdMembers = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check household membership
     const household = await Household.findOne({
       _id: id,
       "members.user": req.user.id,
@@ -266,7 +258,6 @@ const getHouseholdMembers = async (req, res) => {
       });
     }
 
-    // Get members
     const members = household.members.map((member) => ({
       user: member.user,
       role: member.role,
@@ -291,5 +282,7 @@ module.exports = {
   createHousehold,
   getMyHouseholds,
   joinHousehold,
-  getHouseholdDetails, removeHouseholdMember, getHouseholdMembers,
+  getHouseholdDetails,
+  removeHouseholdMember,
+  getHouseholdMembers,
 };

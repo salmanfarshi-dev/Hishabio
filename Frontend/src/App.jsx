@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
@@ -10,6 +11,12 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import VerifyEmail from "./pages/VerifyEmail";
+
+// ====================
+// Household Page
+// ====================
+
+import HouseholdSetup from "./pages/HouseholdSetup";
 
 // ====================
 // Dashboard Pages
@@ -53,6 +60,11 @@ function App() {
             ==================== */}
 
         <Route element={<ProtectedRoute />}>
+          <Route
+            path="/household-setup"
+            element={<HouseholdSetup />}
+          />
+
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/expenses" element={<Expenses />} />

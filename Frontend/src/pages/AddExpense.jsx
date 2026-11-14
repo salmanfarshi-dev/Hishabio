@@ -1,15 +1,10 @@
+
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaPlus } from "react-icons/fa";
 import { useLanguage } from "../context/LanguageContext";
 import API from "../api/axios";
 import toast from "react-hot-toast";
-
-// ====================
-// Household ID
-// ====================
-
-const HOUSEHOLD_ID = "6af6280f520e2fe16c73d79d";
 
 // ====================
 // Get Local Date
@@ -47,14 +42,22 @@ function AddExpense() {
 
   useEffect(() => {
     const fetchMembers = async () => {
+      const householdId = localStorage.getItem("hishabio-household-id");
+
+      if (!householdId) {
+        navigate("/household-setup", { replace: true });
+        return;
+      }
+
       try {
-        const response = await API.get(`/households/${HOUSEHOLD_ID}/members`);
+        const response = await API.get(
+          `/households/${householdId}/members`
+        );
 
         const memberList = response.data.members || response.data.data || [];
 
         setMembers(memberList);
 
-        // Default payer: first household member
         if (memberList.length > 0) {
           const firstMember = memberList[0];
           const firstMemberId =
@@ -69,7 +72,7 @@ function AddExpense() {
         console.error("Fetch Members Error:", error);
 
         toast.error(
-          error.response?.data?.message || "Failed to load household members",
+          error.response?.data?.message || "Failed to load household members"
         );
       } finally {
         setLoadingMembers(false);
@@ -77,7 +80,7 @@ function AddExpense() {
     };
 
     fetchMembers();
-  }, []);
+  }, [navigate]);
 
   // ====================
   // Handle Input Change
@@ -99,6 +102,13 @@ function AddExpense() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    const householdId = localStorage.getItem("hishabio-household-id");
+
+    if (!householdId) {
+      navigate("/household-setup", { replace: true });
+      return;
+    }
+
     if (!formData.title.trim()) {
       return toast.error("Please enter an expense title");
     }
@@ -118,17 +128,17 @@ function AddExpense() {
     try {
       setSubmitting(true);
 
-      const participants = members.map((member) => {
-        const userId = member.user?._id || member.user || member._id;
+      const participants = members
+        .map((member) => {
+          const userId = member.user?._id || member.user;
 
-        return {
-          user: userId,
-        };
-      });
+          return userId ? { user: userId } : null;
+        })
+        .filter(Boolean);
 
       const expenseData = {
-        household: HOUSEHOLD_ID,
-        householdId: HOUSEHOLD_ID,
+        household: householdId,
+        householdId,
         title: formData.title.trim(),
         amount: Number(formData.amount),
         category: formData.category,
@@ -146,7 +156,9 @@ function AddExpense() {
     } catch (error) {
       console.error("Add Expense Error:", error);
 
-      toast.error(error.response?.data?.message || "Failed to add expense");
+      toast.error(
+        error.response?.data?.message || "Failed to add expense"
+      );
     } finally {
       setSubmitting(false);
     }
@@ -265,7 +277,7 @@ function AddExpense() {
 
               {members.map((member) => {
                 const user = member.user;
-                const memberId = user?._id || user || member._id;
+                const memberId = user?._id || user;
                 const memberName = user?.name || member.name || "Member";
 
                 return (
@@ -317,7 +329,9 @@ function AddExpense() {
             ==================== */}
 
         <div className="rounded-xl bg-light-indigo p-4">
-          <p className="text-sm font-semibold text-primary">Equal Split</p>
+          <p className="text-sm font-semibold text-primary">
+            Equal Split
+          </p>
 
           <p className="text-sm text-text mt-1">
             This expense will be divided equally among all {members.length}{" "}

@@ -1,21 +1,35 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaGlobe, FaBell, FaLock, FaUserCog, FaSave } from "react-icons/fa";
 
 import { useLanguage } from "../context/LanguageContext";
+import toast from "react-hot-toast";
+
+const defaultNotifications = {
+  expense: true,
+  settlement: true,
+  invitation: false,
+  email: true,
+};
 
 function Settings() {
   const { language, setLanguage, t } = useLanguage();
 
-  const [notifications, setNotifications] = useState({
-    expense: true,
-    settlement: true,
-    invitation: false,
-    email: true,
-  });
+  const [notifications, setNotifications] = useState(defaultNotifications);
 
-  /* ====================
-     Handle Notification
-     ==================== */
+  useEffect(() => {
+    const savedSettings = localStorage.getItem("hishabio-notifications");
+
+    if (savedSettings) {
+      try {
+        setNotifications({
+          ...defaultNotifications,
+          ...JSON.parse(savedSettings),
+        });
+      } catch (error) {
+        console.error("Settings loading error:", error);
+      }
+    }
+  }, []);
 
   const handleNotification = (name) => {
     setNotifications((previous) => ({
@@ -24,11 +38,50 @@ function Settings() {
     }));
   };
 
+  const handleSaveSettings = () => {
+    try {
+      localStorage.setItem(
+        "hishabio-notifications",
+        JSON.stringify(notifications),
+      );
+
+      toast.success(
+        language === "bn"
+          ? "Settings সফলভাবে সংরক্ষণ হয়েছে!"
+          : "Settings saved successfully!",
+      );
+    } catch (error) {
+      console.error("Settings save error:", error);
+      toast.error("Failed to save settings.");
+    }
+  };
+
+  const notificationOptions = [
+    {
+      key: "expense",
+      title: t("expenseNotifications"),
+      description: t("expenseNotificationsDescription"),
+    },
+    {
+      key: "settlement",
+      title: t("settlementNotifications"),
+      description: t("settlementNotificationsDescription"),
+    },
+    {
+      key: "invitation",
+      title: t("invitationNotifications"),
+      description: t("invitationNotificationsDescription"),
+    },
+    {
+      key: "email",
+      title: t("emailNotifications"),
+      description: t("emailNotificationsDescription"),
+    },
+  ];
+
   return (
     <div className="space-y-6">
-      {/* ====================
-          Page Header
-          ==================== */}
+      {/* Page Header */}
 
       <div>
         <h1 className="text-2xl sm:text-3xl font-heading font-bold text-heading">
@@ -38,9 +91,7 @@ function Settings() {
         <p className="text-sm text-muted mt-2">{t("settingsSubtitle")}</p>
       </div>
 
-      {/* ====================
-          General Settings
-          ==================== */}
+      {/* General Settings */}
 
       <div className="card p-5 sm:p-6 space-y-5">
         <div className="flex items-center gap-3">
@@ -83,9 +134,7 @@ function Settings() {
         </div>
       </div>
 
-      {/* ====================
-          Notification Settings
-          ==================== */}
+      {/* Notification Settings */}
 
       <div className="card p-5 sm:p-6 space-y-5">
         <div className="flex items-center gap-3">
@@ -103,28 +152,7 @@ function Settings() {
         </div>
 
         <div className="border-t border-border pt-2 space-y-5">
-          {[
-            {
-              key: "expense",
-              title: t("expenseNotifications"),
-              description: t("expenseNotificationsDescription"),
-            },
-            {
-              key: "settlement",
-              title: t("settlementNotifications"),
-              description: t("settlementNotificationsDescription"),
-            },
-            {
-              key: "invitation",
-              title: t("invitationNotifications"),
-              description: t("invitationNotificationsDescription"),
-            },
-            {
-              key: "email",
-              title: t("emailNotifications"),
-              description: t("emailNotificationsDescription"),
-            },
-          ].map((item) => (
+          {notificationOptions.map((item) => (
             <div
               key={item.key}
               className="flex items-center justify-between gap-4"
@@ -155,9 +183,7 @@ function Settings() {
         </div>
       </div>
 
-      {/* ====================
-          Security Settings
-          ==================== */}
+      {/* Security Settings */}
 
       <div className="card p-5 sm:p-6">
         <div className="flex items-center gap-3">
@@ -193,15 +219,13 @@ function Settings() {
         </div>
       </div>
 
-      {/* ====================
-          Save Settings
-          ==================== */}
+      {/* Save Settings */}
 
       <div className="flex justify-end">
         <button
           type="button"
-          disabled
-          className="btn-primary opacity-60 cursor-not-allowed"
+          onClick={handleSaveSettings}
+          className="btn-primary"
         >
           <FaSave />
           {t("saveSettings")}

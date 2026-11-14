@@ -1,14 +1,9 @@
 import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { FaArrowRight, FaCheckCircle, FaClock, FaPlus } from "react-icons/fa";
 import { useLanguage } from "../context/LanguageContext";
 import API from "../api/axios";
 import toast from "react-hot-toast";
-
-// ====================
-// Household ID
-// ====================
-
-const HOUSEHOLD_ID = "6af6280f520e2fe16c73d79d";
 
 // ====================
 // Format Amount
@@ -33,6 +28,7 @@ const formatDate = (date) => {
 
 function Settlements() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   const [settlements, setSettlements] = useState([]);
   const [members, setMembers] = useState([]);
@@ -49,14 +45,38 @@ function Settlements() {
   });
 
   // ====================
+  // Current User
+  // ====================
+
+  const storedUser =
+    localStorage.getItem("hishabio-user") ||
+    sessionStorage.getItem("hishabio-user");
+
+  let currentUserId = "";
+
+  try {
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    currentUserId = user?._id || user?.id || "";
+  } catch {
+    currentUserId = "";
+  }
+
+  // ====================
+  // Get Member Information
+  // ====================
+
+  const getMemberId = (member) => member.user?._id || member.user || member._id;
+
+  const getMemberName = (member) =>
+    member.user?.name || member.name || "Member";
+
+  // ====================
   // Fetch Settlements
   // ====================
 
-  const fetchSettlements = async () => {
+  const fetchSettlements = async (householdId) => {
     try {
-      const response = await API.get(
-        `/settlements?householdId=${HOUSEHOLD_ID}`,
-      );
+      const response = await API.get(`/settlements?householdId=${householdId}`);
 
       const list = response.data.settlements || response.data.data || [];
 
@@ -74,9 +94,9 @@ function Settlements() {
   // Fetch Household Members
   // ====================
 
-  const fetchMembers = async () => {
+  const fetchMembers = async (householdId) => {
     try {
-      const response = await API.get(`/households/${HOUSEHOLD_ID}/members`);
+      const response = await API.get(`/households/${householdId}/members`);
 
       const list = response.data.members || response.data.data || [];
 
@@ -96,15 +116,25 @@ function Settlements() {
 
   useEffect(() => {
     const loadData = async () => {
+      const householdId = localStorage.getItem("hishabio-household-id");
+
+      if (!householdId) {
+        navigate("/household-setup", { replace: true });
+        return;
+      }
+
       try {
-        await Promise.all([fetchSettlements(), fetchMembers()]);
+        await Promise.all([
+          fetchSettlements(householdId),
+          fetchMembers(householdId),
+        ]);
       } finally {
         setLoading(false);
       }
     };
 
     loadData();
-  }, []);
+  }, [navigate]);
 
   // ====================
   // Handle Input Change
@@ -120,20 +150,19 @@ function Settlements() {
   };
 
   // ====================
-  // Get Member Information
-  // ====================
-
-  const getMemberId = (member) => member.user?._id || member.user || member._id;
-
-  const getMemberName = (member) =>
-    member.user?.name || member.name || "Member";
-
-  // ====================
   // Handle Settlement Submit
   // ====================
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const householdId = localStorage.getItem("hishabio-household-id");
+
+    if (!householdId) {
+      toast.error("Household not found");
+      navigate("/household-setup");
+      return;
+    }
 
     if (!formData.receivedBy) {
       return toast.error("Please select a member");
@@ -147,8 +176,8 @@ function Settlements() {
       setSubmitting(true);
 
       const settlementData = {
-        household: HOUSEHOLD_ID,
-        householdId: HOUSEHOLD_ID,
+        household: householdId,
+        householdId,
         receivedBy: formData.receivedBy,
         amount: Number(formData.amount),
         date: formData.date,
@@ -168,7 +197,7 @@ function Settlements() {
 
       setShowForm(false);
 
-      await fetchSettlements();
+      await fetchSettlements(householdId);
     } catch (error) {
       console.error("Create Settlement Error:", error);
 
@@ -256,15 +285,24 @@ function Settlements() {
                 >
                   <option value="">Select Member</option>
 
-                  {members.map((member) => {
-                    const memberId = getMemberId(member);
+                  {members
+                    .filter((member) => {
+                      const memberId = getMemberId(member);
 
-                    return (
-                      <option key={memberId} value={memberId}>
-                        {getMemberName(member)}
-                      </option>
-                    );
-                  })}
+                      return (
+                        !currentUserId ||
+                        String(memberId) !== String(currentUserId)
+                      );
+                    })
+                    .map((member) => {
+                      const memberId = getMemberId(member);
+
+                      return (
+                        <option key={memberId} value={memberId}>
+                          {getMemberName(member)}
+                        </option>
+                      );
+                    })}
                 </select>
               </div>
 
@@ -480,10 +518,10 @@ function Settlements() {
           <p className="text-sm text-muted mt-1">{t("balanceDescription")}</p>
         </div>
 
-        <a href="/balances" className="btn-primary">
+        <Link to="/balances" className="btn-primary">
           {t("viewBalances")}
           <FaArrowRight />
-        </a>
+        </Link>
       </div>
     </div>
   );

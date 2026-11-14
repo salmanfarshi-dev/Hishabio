@@ -1,14 +1,9 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaArrowDown, FaArrowUp, FaWallet } from "react-icons/fa";
 import { useLanguage } from "../context/LanguageContext";
 import API from "../api/axios";
 import toast from "react-hot-toast";
-
-// ====================
-// Household ID
-// ====================
-
-const HOUSEHOLD_ID = "6af6280f520e2fe16c73d79d";
 
 // ====================
 // Currency Formatter
@@ -19,10 +14,28 @@ const formatAmount = (amount) =>
 
 function Balances() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   const [members, setMembers] = useState([]);
   const [totalExpenses, setTotalExpenses] = useState(0);
   const [loading, setLoading] = useState(true);
+
+  // ====================
+  // Current User
+  // ====================
+
+  const storedUser =
+    localStorage.getItem("hishabio-user") ||
+    sessionStorage.getItem("hishabio-user");
+
+  let currentUserId = "";
+
+  try {
+    const user = storedUser ? JSON.parse(storedUser) : null;
+    currentUserId = user?._id || user?.id || "";
+  } catch {
+    currentUserId = "";
+  }
 
   // ====================
   // Fetch Balances
@@ -30,9 +43,18 @@ function Balances() {
 
   useEffect(() => {
     const fetchBalances = async () => {
+      const householdId = localStorage.getItem("hishabio-household-id");
+
+      if (!householdId) {
+        navigate("/household-setup", { replace: true });
+        return;
+      }
+
       try {
+        setLoading(true);
+
         const response = await API.get(
-          `/expenses/balances?householdId=${HOUSEHOLD_ID}`,
+          `/expenses/balances?householdId=${householdId}`,
         );
 
         const data = response.data;
@@ -41,10 +63,9 @@ function Balances() {
 
         setMembers(balanceList);
 
-        // Total expenses from members' paid amounts
         const totalPaid = balanceList.reduce(
           (total, member) =>
-            total + Number(member.paid || member.totalPaid || 0),
+            total + Number(member.paid ?? member.totalPaid ?? 0),
           0,
         );
 
@@ -61,25 +82,7 @@ function Balances() {
     };
 
     fetchBalances();
-  }, []);
-
-  // ====================
-  // Current User
-  // ====================
-
-  const storedUser =
-    localStorage.getItem("hishabio-user") ||
-    sessionStorage.getItem("hishabio-user");
-
-  let currentUserId = "";
-
-  try {
-    currentUserId = storedUser
-      ? JSON.parse(storedUser)?._id || JSON.parse(storedUser)?.id
-      : "";
-  } catch {
-    currentUserId = "";
-  }
+  }, [navigate]);
 
   // ====================
   // Current User Balance
@@ -138,7 +141,6 @@ function Balances() {
         <div className="card p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted">{t("totalExpenses")}</p>
-
             <FaWallet className="text-primary" />
           </div>
 
@@ -150,7 +152,6 @@ function Balances() {
         <div className="card p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted">{t("youWillReceive")}</p>
-
             <FaArrowDown className="text-success" />
           </div>
 
@@ -162,7 +163,6 @@ function Balances() {
         <div className="card p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted">{t("youOwe")}</p>
-
             <FaArrowUp className="text-danger" />
           </div>
 
@@ -195,13 +195,9 @@ function Balances() {
               <thead className="bg-surface-hover text-muted text-sm">
                 <tr>
                   <th className="px-5 py-4 font-semibold">{t("member")}</th>
-
                   <th className="px-5 py-4 font-semibold">{t("paid")}</th>
-
                   <th className="px-5 py-4 font-semibold">{t("share")}</th>
-
                   <th className="px-5 py-4 font-semibold">{t("netBalance")}</th>
-
                   <th className="px-5 py-4 font-semibold">{t("status")}</th>
                 </tr>
               </thead>
@@ -210,6 +206,7 @@ function Balances() {
                 {members.map((member) => {
                   const balance = getBalance(member);
                   const memberId = getMemberId(member);
+
                   const isYou =
                     currentUserId && String(memberId) === String(currentUserId);
 

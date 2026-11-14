@@ -8,7 +8,7 @@ import {
   FaBolt,
   FaEllipsisH,
 } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
 import API from "../api/axios";
 import toast from "react-hot-toast";
@@ -42,6 +42,7 @@ const categoryStyles = {
 
 function Expenses() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
@@ -54,8 +55,15 @@ function Expenses() {
 
   useEffect(() => {
     const fetchExpenses = async () => {
+      const householdId = localStorage.getItem("hishabio-household-id");
+
+      if (!householdId) {
+        navigate("/household-setup", { replace: true });
+        return;
+      }
+
       try {
-        const householdId = "6af6280f520e2fe16c73d79d";
+        setLoading(true);
 
         const response = await API.get(`/expenses?householdId=${householdId}`);
 
@@ -70,7 +78,7 @@ function Expenses() {
     };
 
     fetchExpenses();
-  }, []);
+  }, [navigate]);
 
   // ====================
   // Search And Filter
