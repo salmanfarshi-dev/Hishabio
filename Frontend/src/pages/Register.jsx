@@ -1,5 +1,7 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import toast from "react-hot-toast";
+
 import {
   FaWallet,
   FaUser,
@@ -12,25 +14,72 @@ import {
 } from "react-icons/fa";
 
 import { useLanguage } from "../context/LanguageContext";
+import API from "../api/axios";
 
 function Register() {
   const { t } = useLanguage();
+  const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  {
-    /* ====================
-       Register Form Submit
-       ==================== */
-  }
+  // ====================
+  // Register Form Submit
+  // ====================
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Backend Registration will be added later.
-    console.log("Register form submitted");
+    const formData = new FormData(e.currentTarget);
+
+    const name = formData.get("fullName").trim();
+    const email = formData.get("email").trim().toLowerCase();
+    const password = formData.get("password");
+    const confirmPassword = formData.get("confirmPassword");
+
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match.");
+      return;
+    }
+
+    if (password.length < 8) {
+      toast.error("Password must be at least 8 characters.");
+      return;
+    }
+
+    if (!agreeTerms) {
+      toast.error("Please accept the terms and conditions.");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const response = await API.post("/auth/register", {
+        name,
+        email,
+        password,
+      });
+
+      if (response.data.success) {
+        sessionStorage.setItem("hishabio-pending-email", email);
+
+        toast.success("OTP sent to your email!");
+
+        navigate("/verify-email", {
+          state: { email },
+        });
+      }
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message ||
+          "Registration failed. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -178,6 +227,7 @@ function Register() {
                     placeholder={t("enterFullName")}
                     autoComplete="name"
                     required
+                    minLength={2}
                     className="w-full rounded-xl border border-border bg-surface py-3.5 pl-11 pr-4 text-heading outline-none transition placeholder:text-muted/70 focus:border-primary focus:ring-4 focus:ring-primary/10"
                   />
                 </div>
@@ -231,7 +281,7 @@ function Register() {
                     name="password"
                     placeholder={t("enterPassword")}
                     autoComplete="new-password"
-                    minLength={6}
+                    minLength={8}
                     required
                     className="w-full rounded-xl border border-border bg-surface py-3.5 pl-11 pr-12 text-heading outline-none transition placeholder:text-muted/70 focus:border-primary focus:ring-4 focus:ring-primary/10"
                   />
@@ -270,7 +320,7 @@ function Register() {
                     name="confirmPassword"
                     placeholder={t("enterConfirmPassword")}
                     autoComplete="new-password"
-                    minLength={6}
+                    minLength={8}
                     required
                     className="w-full rounded-xl border border-border bg-surface py-3.5 pl-11 pr-12 text-heading outline-none transition placeholder:text-muted/70 focus:border-primary focus:ring-4 focus:ring-primary/10"
                   />
@@ -323,11 +373,12 @@ function Register() {
 
               <button
                 type="submit"
-                disabled={!agreeTerms}
+                disabled={!agreeTerms || loading}
                 className="btn-primary w-full py-4 disabled:cursor-not-allowed disabled:opacity-50"
               >
-                {t("registerButton")}
-                <FaArrowRight />
+                {loading ? "Creating Account..." : t("registerButton")}
+
+                {!loading && <FaArrowRight />}
               </button>
             </form>
 

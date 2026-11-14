@@ -9,61 +9,57 @@ import {
 import { Link } from "react-router-dom";
 import { useLanguage } from "../../context/LanguageContext";
 
-function RecentExpenses() {
+// ====================
+// Category Icons
+// ====================
+
+const categoryStyles = {
+  food: {
+    icon: FaUtensils,
+    color: "bg-orange-50 text-warning",
+  },
+  groceries: {
+    icon: FaShoppingBag,
+    color: "bg-light-indigo text-primary",
+  },
+  shopping: {
+    icon: FaShoppingBag,
+    color: "bg-purple-50 text-secondary",
+  },
+  utilities: {
+    icon: FaBolt,
+    color: "bg-yellow-50 text-warning",
+  },
+  transport: {
+    icon: FaBus,
+    color: "bg-blue-50 text-info",
+  },
+};
+
+function RecentExpenses({ expenses = [] }) {
   const { t } = useLanguage();
 
-  const expenses = [
-    {
-      id: 1,
-      title: "Monthly Grocery",
-      category: "food",
-      paidBy: "Salman",
-      date: "Nov 12, 2026",
-      amount: 2500,
-      icon: FaShoppingBag,
-      color: "bg-light-indigo text-primary",
-    },
-    {
-      id: 2,
-      title: "Dinner",
-      category: "food",
-      paidBy: "Rahim",
-      date: "Nov 11, 2026",
-      amount: 1200,
-      icon: FaUtensils,
-      color: "bg-orange-50 text-warning",
-    },
-    {
-      id: 3,
-      title: "Electricity Bill",
-      category: "utilities",
-      paidBy: "Karim",
-      date: "Nov 10, 2026",
-      amount: 1800,
-      icon: FaBolt,
-      color: "bg-yellow-50 text-warning",
-    },
-    {
-      id: 4,
-      title: "Bus Fare",
-      category: "transport",
-      paidBy: "Salman",
-      date: "Nov 09, 2026",
-      amount: 300,
-      icon: FaBus,
-      color: "bg-blue-50 text-info",
-    },
-    {
-      id: 5,
-      title: "Shopping",
-      category: "shopping",
-      paidBy: "Rahim",
-      date: "Nov 08, 2026",
-      amount: 2200,
-      icon: FaShoppingBag,
-      color: "bg-purple-50 text-secondary",
-    },
-  ];
+  // ====================
+  // Currency Formatter
+  // ====================
+
+  const formatAmount = (amount) => {
+    return new Intl.NumberFormat("en-BD").format(amount || 0);
+  };
+
+  // ====================
+  // Date Formatter
+  // ====================
+
+  const formatDate = (date) => {
+    if (!date) return "";
+
+    return new Date(date).toLocaleDateString("en-BD", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
 
   return (
     <div className="card p-5 sm:p-6">
@@ -76,6 +72,7 @@ function RecentExpenses() {
           <h2 className="text-lg font-heading font-bold text-heading">
             {t("recentExpenses")}
           </h2>
+
           <p className="text-xs text-muted mt-1">{t("thisMonth")}</p>
         </div>
 
@@ -93,50 +90,73 @@ function RecentExpenses() {
           ==================== */}
 
       <div className="space-y-1">
-        {expenses.map((expense) => {
-          const Icon = expense.icon;
+        {expenses.length > 0 ? (
+          expenses.map((expense) => {
+            const category = expense.category?.toLowerCase();
 
-          return (
-            <div
-              key={expense.id}
-              className="flex items-center justify-between gap-3 py-4 border-b border-border last:border-0"
-            >
-              {/* ====================
-                  Expense Information
-                  ==================== */}
+            const style = categoryStyles[category] || {
+              icon: FaEllipsisH,
+              color: "bg-light-indigo text-primary",
+            };
 
-              <div className="flex items-center gap-3 min-w-0">
-                <div
-                  className={`w-11 h-11 shrink-0 rounded-xl flex items-center justify-center ${expense.color}`}
-                >
-                  <Icon size={17} />
+            const Icon = style.icon;
+
+            return (
+              <div
+                key={expense._id}
+                className="flex items-center justify-between gap-3 py-4 border-b border-border last:border-0"
+              >
+                {/* ====================
+                    Expense Information
+                    ==================== */}
+
+                <div className="flex items-center gap-3 min-w-0">
+                  <div
+                    className={`w-11 h-11 shrink-0 rounded-xl flex items-center justify-center ${style.color}`}
+                  >
+                    <Icon size={17} />
+                  </div>
+
+                  <div className="min-w-0">
+                    <h3 className="text-sm font-bold text-heading truncate">
+                      {expense.title}
+                    </h3>
+
+                    <p className="text-xs text-muted mt-1">
+                      {t(category) || expense.category} •{" "}
+                      {expense.paidBy?.name || "Unknown"} •{" "}
+                      {formatDate(expense.date)}
+                    </p>
+                  </div>
                 </div>
 
-                <div className="min-w-0">
-                  <h3 className="text-sm font-bold text-heading truncate">
-                    {expense.title}
-                  </h3>
+                {/* ====================
+                    Expense Amount
+                    ==================== */}
 
-                  <p className="text-xs text-muted mt-1">
-                    {t(expense.category)} • {expense.paidBy} • {expense.date}
+                <div className="text-right shrink-0">
+                  <p className="text-sm font-heading font-bold text-heading">
+                    ৳{formatAmount(expense.amount)}
                   </p>
+
+                  <p className="text-xs text-muted mt-1">{t("amount")}</p>
                 </div>
               </div>
+            );
+          })
+        ) : (
+          <div className="text-center py-10">
+            <FaShoppingBag className="text-3xl text-muted mx-auto mb-3" />
 
-              {/* ====================
-                  Expense Amount
-                  ==================== */}
+            <p className="text-sm font-semibold text-heading">
+              No expenses yet
+            </p>
 
-              <div className="text-right shrink-0">
-                <p className="text-sm font-heading font-bold text-heading">
-                  ৳{expense.amount.toLocaleString("en-BD")}
-                </p>
-
-                <p className="text-xs text-muted mt-1">{t("amount")}</p>
-              </div>
-            </div>
-          );
-        })}
+            <p className="text-xs text-muted mt-1">
+              Your recent expenses will appear here.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

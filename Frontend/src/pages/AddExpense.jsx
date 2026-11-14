@@ -1,24 +1,87 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaPlus } from "react-icons/fa";
 import { useLanguage } from "../context/LanguageContext";
+import API from "../api/axios";
+import toast from "react-hot-toast";
+
+// ====================
+// Household ID
+// ====================
+
+const HOUSEHOLD_ID = "6af6280f520e2fe16c73d79d";
+
+// ====================
+// Get Local Date
+// ====================
+
+const getToday = () => {
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
 
 function AddExpense() {
   const { t } = useLanguage();
   const navigate = useNavigate();
+
+  const [members, setMembers] = useState([]);
+  const [loadingMembers, setLoadingMembers] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     title: "",
     amount: "",
     category: "",
     paidBy: "",
-    date: "",
+    date: getToday(),
     description: "",
   });
 
-  /* ====================
-     Handle Input Change
-     ==================== */
+  // ====================
+  // Fetch Household Members
+  // ====================
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      try {
+        const response = await API.get(`/households/${HOUSEHOLD_ID}/members`);
+
+        const memberList = response.data.members || response.data.data || [];
+
+        setMembers(memberList);
+
+        // Default payer: first household member
+        if (memberList.length > 0) {
+          const firstMember = memberList[0];
+          const firstMemberId =
+            firstMember.user?._id || firstMember.user || firstMember._id;
+
+          setFormData((previous) => ({
+            ...previous,
+            paidBy: firstMemberId,
+          }));
+        }
+      } catch (error) {
+        console.error("Fetch Members Error:", error);
+
+        toast.error(
+          error.response?.data?.message || "Failed to load household members",
+        );
+      } finally {
+        setLoadingMembers(false);
+      }
+    };
+
+    fetchMembers();
+  }, []);
+
+  // ====================
+  // Handle Input Change
+  // ====================
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -29,16 +92,64 @@ function AddExpense() {
     }));
   };
 
-  /* ====================
-     Handle Form Submit
-     ==================== */
+  // ====================
+  // Handle Form Submit
+  // ====================
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    console.log("New Expense:", formData);
+    if (!formData.title.trim()) {
+      return toast.error("Please enter an expense title");
+    }
 
-    navigate("/expenses");
+    if (Number(formData.amount) <= 0) {
+      return toast.error("Please enter a valid amount");
+    }
+
+    if (!formData.paidBy) {
+      return toast.error("Please select who paid");
+    }
+
+    if (members.length === 0) {
+      return toast.error("No household members found");
+    }
+
+    try {
+      setSubmitting(true);
+
+      const participants = members.map((member) => {
+        const userId = member.user?._id || member.user || member._id;
+
+        return {
+          user: userId,
+        };
+      });
+
+      const expenseData = {
+        household: HOUSEHOLD_ID,
+        householdId: HOUSEHOLD_ID,
+        title: formData.title.trim(),
+        amount: Number(formData.amount),
+        category: formData.category,
+        paidBy: formData.paidBy,
+        splitType: "equal",
+        participants,
+        date: formData.date,
+        description: formData.description.trim(),
+      };
+
+      await API.post("/expenses", expenseData);
+
+      toast.success("Expense added successfully!");
+      navigate("/expenses");
+    } catch (error) {
+      console.error("Add Expense Error:", error);
+
+      toast.error(error.response?.data?.message || "Failed to add expense");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -104,6 +215,7 @@ function AddExpense() {
               onChange={handleChange}
               placeholder="Enter amount"
               min="1"
+              step="0.01"
               required
               className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-heading outline-none focus:border-primary transition"
             />
@@ -124,11 +236,11 @@ function AddExpense() {
               className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-heading outline-none focus:border-primary transition"
             >
               <option value="">{t("selectCategory")}</option>
-              <option value="Food">{t("food")}</option>
-              <option value="Transport">{t("transport")}</option>
-              <option value="Shopping">{t("shopping")}</option>
-              <option value="Utilities">{t("utilities")}</option>
-              <option value="Others">{t("others")}</option>
+              <option value="food">{t("food")}</option>
+              <option value="transport">{t("transport")}</option>
+              <option value="shopping">{t("shopping")}</option>
+              <option value="utilities">{t("utilities")}</option>
+              <option value="others">{t("others")}</option>
             </select>
           </div>
 
@@ -144,13 +256,24 @@ function AddExpense() {
               value={formData.paidBy}
               onChange={handleChange}
               required
-              className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-heading outline-none focus:border-primary transition"
+              disabled={loadingMembers || members.length === 0}
+              className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-heading outline-none focus:border-primary transition disabled:opacity-60"
             >
-              <option value="">{t("selectMember")}</option>
-              <option value="Salman Farshi">Salman Farshi</option>
-              <option value="Rahim">Rahim</option>
-              <option value="Karim">Karim</option>
-              <option value="Hasan">Hasan</option>
+              <option value="">
+                {loadingMembers ? "Loading members..." : t("selectMember")}
+              </option>
+
+              {members.map((member) => {
+                const user = member.user;
+                const memberId = user?._id || user || member._id;
+                const memberName = user?.name || member.name || "Member";
+
+                return (
+                  <option key={memberId} value={memberId}>
+                    {memberName}
+                  </option>
+                );
+              })}
             </select>
           </div>
 
@@ -190,6 +313,19 @@ function AddExpense() {
         </div>
 
         {/* ====================
+            Split Information
+            ==================== */}
+
+        <div className="rounded-xl bg-light-indigo p-4">
+          <p className="text-sm font-semibold text-primary">Equal Split</p>
+
+          <p className="text-sm text-text mt-1">
+            This expense will be divided equally among all {members.length}{" "}
+            household members.
+          </p>
+        </div>
+
+        {/* ====================
             Form Buttons
             ==================== */}
 
@@ -201,9 +337,13 @@ function AddExpense() {
             {t("cancel")}
           </Link>
 
-          <button type="submit" className="btn-primary">
+          <button
+            type="submit"
+            disabled={submitting || loadingMembers || members.length === 0}
+            className="btn-primary disabled:opacity-60 disabled:cursor-not-allowed"
+          >
             <FaPlus />
-            {t("saveExpense")}
+            {submitting ? "Saving..." : t("saveExpense")}
           </button>
         </div>
       </form>

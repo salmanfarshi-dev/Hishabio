@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+
 import {
   FaWallet,
   FaEnvelope,
@@ -9,56 +10,96 @@ import {
   FaArrowRight,
   FaShieldAlt,
 } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+
 import { useLanguage } from "../context/LanguageContext";
+import API from "../api/axios";
 
 function Login() {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
+  // ====================
+  // Form States
+  // ====================
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  {
-    /* ====================
-       Login Form Submit
-       ==================== */
-  }
+  // ====================
+  // Authentication States
+  // ====================
 
-  const handleSubmit = (e) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // ====================
+  // Login Form Submit
+  // ====================
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    localStorage.setItem("hishabio-demo-auth", "true");
+    setError("");
+    setLoading(true);
 
-    navigate("/dashboard");
+    try {
+      const response = await API.post("/auth/login", {
+        email,
+        password,
+      });
 
-    // Backend Authentication will be added later.
-    console.log("Login form submitted");
+      const { token, user } = response.data;
+
+      // Save authentication data
+      const storage = rememberMe ? localStorage : sessionStorage;
+
+      // Remove previous authentication data
+      localStorage.removeItem("hishabio-token");
+      localStorage.removeItem("hishabio-user");
+      sessionStorage.removeItem("hishabio-token");
+      sessionStorage.removeItem("hishabio-user");
+
+      // Store new authentication data
+      storage.setItem("hishabio-token", token);
+      storage.setItem("hishabio-user", JSON.stringify(user));
+
+      // Navigate to dashboard
+      navigate("/dashboard");
+    } catch (error) {
+      setError(
+        error.response?.data?.message ||
+          "Login failed. Please check your email and password.",
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <main className="min-h-screen bg-background px-4 py-6 sm:px-6 lg:flex lg:items-center lg:justify-center lg:p-8">
       {/* ====================
-           Main Login Container
-           ==================== */}
+          Main Login Container
+          ==================== */}
 
-      <div className="container-main flex min-h-[calc(100vh-3rem)] max-w-[1440px] flex-col overflow-hidden rounded-3xl bg-surface  shadow-xl shadow-primary/5 lg:min-h-[calc(100vh-4rem)] lg:flex-row p-0!">
+      <div className="container-main flex min-h-[calc(100vh-3rem)] max-w-[1440px] flex-col overflow-hidden rounded-3xl bg-surface p-0! shadow-xl shadow-primary/5 lg:min-h-[calc(100vh-4rem)] lg:flex-row">
         {/* ====================
-             Left Side Branding
-             ==================== */}
+            Left Side Branding
+            ==================== */}
 
-        <section className="relative hidden w-1/2 shrink-0 flex-col justify-between overflow-hidden bg-primary p-8 xl:p-12 lg:flex">
+        <section className="relative hidden w-1/2 shrink-0 flex-col justify-between overflow-hidden bg-primary p-8 lg:flex xl:p-12">
           {/* ====================
-               Background Decoration
-               ==================== */}
+              Background Decoration
+              ==================== */}
 
           <div className="absolute -right-32 -top-32 h-96 w-96 rounded-full bg-secondary/40 blur-3xl" />
 
           <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-accent/30 blur-3xl" />
 
           {/* ====================
-               Brand Logo
-               ==================== */}
+              Brand Logo
+              ==================== */}
 
           <Link to="/" className="relative z-10 flex items-center gap-3">
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-primary">
@@ -71,8 +112,8 @@ function Login() {
           </Link>
 
           {/* ====================
-               Branding Content
-               ==================== */}
+              Branding Content
+              ==================== */}
 
           <div className="relative z-10 my-12 max-w-lg">
             <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white">
@@ -90,8 +131,8 @@ function Login() {
             </p>
 
             {/* ====================
-                 Security Information
-                 ==================== */}
+                Security Information
+                ==================== */}
 
             <div className="mt-10 rounded-2xl border border-white/20 bg-white/10 p-5 backdrop-blur-lg">
               <div className="flex items-center gap-3">
@@ -111,8 +152,8 @@ function Login() {
           </div>
 
           {/* ====================
-               Branding Footer
-               ==================== */}
+              Branding Footer
+              ==================== */}
 
           <p className="relative z-10 text-sm text-white/70">
             © {new Date().getFullYear()} Hishabio. {t("copyright")}
@@ -120,14 +161,14 @@ function Login() {
         </section>
 
         {/* ====================
-             Right Side Login Form
-             ==================== */}
+            Right Side Login Form
+            ==================== */}
 
         <section className="flex min-w-0 flex-1 items-center justify-center px-5 py-10 sm:px-10 lg:px-8 xl:px-12">
           <div className="w-full max-w-md">
             {/* ====================
-                 Mobile Brand Logo
-                 ==================== */}
+                Mobile Brand Logo
+                ==================== */}
 
             <Link
               to="/"
@@ -143,8 +184,8 @@ function Login() {
             </Link>
 
             {/* ====================
-                 Form Heading
-                 ==================== */}
+                Form Heading
+                ==================== */}
 
             <div className="mb-9">
               <h2 className="font-heading text-3xl font-extrabold leading-tight text-heading sm:text-4xl">
@@ -155,13 +196,13 @@ function Login() {
             </div>
 
             {/* ====================
-                 Login Form
-                 ==================== */}
+                Login Form
+                ==================== */}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {/* ====================
-                   Email Input
-                   ==================== */}
+                  Email Input
+                  ==================== */}
 
               <div>
                 <label
@@ -180,6 +221,8 @@ function Login() {
                     name="email"
                     placeholder={t("enterEmail")}
                     autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
                     className="w-full rounded-xl border border-border bg-surface py-3.5 pl-11 pr-4 text-heading outline-none transition placeholder:text-muted/70 focus:border-primary focus:ring-4 focus:ring-primary/10"
                   />
@@ -187,8 +230,8 @@ function Login() {
               </div>
 
               {/* ====================
-                   Password Input
-                   ==================== */}
+                  Password Input
+                  ==================== */}
 
               <div>
                 <label
@@ -207,6 +250,8 @@ function Login() {
                     name="password"
                     placeholder={t("enterPassword")}
                     autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
                     required
                     className="w-full rounded-xl border border-border bg-surface py-3.5 pl-11 pr-12 text-heading outline-none transition placeholder:text-muted/70 focus:border-primary focus:ring-4 focus:ring-primary/10"
                   />
@@ -225,8 +270,8 @@ function Login() {
               </div>
 
               {/* ====================
-                   Remember Me & Forgot Password
-                   ==================== */}
+                  Remember Me & Forgot Password
+                  ==================== */}
 
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <label className="flex cursor-pointer items-center gap-2 text-sm text-text">
@@ -249,18 +294,36 @@ function Login() {
               </div>
 
               {/* ====================
-                   Login Button
-                   ==================== */}
+                  Error Message
+                  ==================== */}
 
-              <button type="submit" className="btn-primary w-full py-4">
-                {t("loginButton")}
-                <FaArrowRight />
+              {error && (
+                <p
+                  role="alert"
+                  className="rounded-xl border border-danger/20 bg-danger/10 px-4 py-3 text-sm text-danger"
+                >
+                  {error}
+                </p>
+              )}
+
+              {/* ====================
+                  Login Button
+                  ==================== */}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="btn-primary flex w-full items-center justify-center gap-3 py-4 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? "Logging in..." : t("loginButton")}
+
+                {!loading && <FaArrowRight />}
               </button>
             </form>
 
             {/* ====================
-                 Register Link
-                 ==================== */}
+                Register Link
+                ==================== */}
 
             <div className="mt-8 text-center">
               <p className="text-sm text-muted">

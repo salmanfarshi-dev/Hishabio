@@ -1,10 +1,19 @@
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
+// ====================
+// Public Pages
+// ====================
+
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
+import VerifyEmail from "./pages/VerifyEmail";
+
+// ====================
+// Dashboard Pages
+// ====================
 
 import Dashboard from "./pages/Dashboard";
 import Expenses from "./pages/Expenses";
@@ -15,6 +24,10 @@ import Members from "./pages/Members";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
+
+// ====================
+// Layout & Routes
+// ====================
 
 import DashboardLayout from "./layouts/DashboardLayout";
 import ProtectedRoute from "./routes/ProtectedRoute";
@@ -32,6 +45,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
 
         {/* ====================

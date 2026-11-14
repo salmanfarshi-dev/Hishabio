@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   FaPlus,
   FaSearch,
@@ -10,69 +10,104 @@ import {
 } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
+import API from "../api/axios";
+import toast from "react-hot-toast";
+
+// ====================
+// Category Icons
+// ====================
+
+const categoryStyles = {
+  food: {
+    icon: FaUtensils,
+    color: "bg-orange-50 text-warning",
+  },
+  groceries: {
+    icon: FaShoppingBag,
+    color: "bg-light-indigo text-primary",
+  },
+  shopping: {
+    icon: FaShoppingBag,
+    color: "bg-purple-50 text-secondary",
+  },
+  utilities: {
+    icon: FaBolt,
+    color: "bg-yellow-50 text-warning",
+  },
+  transport: {
+    icon: FaBus,
+    color: "bg-blue-50 text-info",
+  },
+};
 
 function Expenses() {
   const { t } = useLanguage();
+
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const expenses = [
-    {
-      id: 1,
-      title: "Monthly Grocery",
-      category: "food",
-      paidBy: "Salman",
-      date: "Nov 12, 2026",
-      amount: 2500,
-      icon: FaShoppingBag,
-    },
-    {
-      id: 2,
-      title: "Dinner",
-      category: "food",
-      paidBy: "Rahim",
-      date: "Nov 11, 2026",
-      amount: 1200,
-      icon: FaUtensils,
-    },
-    {
-      id: 3,
-      title: "Electricity Bill",
-      category: "utilities",
-      paidBy: "Karim",
-      date: "Nov 10, 2026",
-      amount: 1800,
-      icon: FaBolt,
-    },
-    {
-      id: 4,
-      title: "Bus Fare",
-      category: "transport",
-      paidBy: "Salman",
-      date: "Nov 09, 2026",
-      amount: 300,
-      icon: FaBus,
-    },
-    {
-      id: 5,
-      title: "Shopping",
-      category: "shopping",
-      paidBy: "Rahim",
-      date: "Nov 08, 2026",
-      amount: 2200,
-      icon: FaShoppingBag,
-    },
-  ];
+  // ====================
+  // Fetch Expenses
+  // ====================
+
+  useEffect(() => {
+    const fetchExpenses = async () => {
+      try {
+        const householdId = "6af6280f520e2fe16c73d79d";
+
+        const response = await API.get(`/expenses?householdId=${householdId}`);
+
+        setExpenses(response.data.expenses || response.data.data || []);
+      } catch (error) {
+        console.error("Fetch Expenses Error:", error);
+
+        toast.error(error.response?.data?.message || "Failed to load expenses");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchExpenses();
+  }, []);
+
+  // ====================
+  // Search And Filter
+  // ====================
 
   const filteredExpenses = expenses.filter((expense) => {
     const matchesSearch = expense.title
-      .toLowerCase()
+      ?.toLowerCase()
       .includes(search.toLowerCase());
 
-    const matchesCategory = category === "all" || expense.category === category;
+    const matchesCategory =
+      category === "all" || expense.category?.toLowerCase() === category;
 
     return matchesSearch && matchesCategory;
   });
+
+  // ====================
+  // Format Date
+  // ====================
+
+  const formatDate = (date) => {
+    if (!date) return "";
+
+    return new Date(date).toLocaleDateString("en-BD", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  };
+
+  // ====================
+  // Format Amount
+  // ====================
+
+  const formatAmount = (amount) => {
+    return new Intl.NumberFormat("en-BD").format(amount || 0);
+  };
 
   return (
     <div className="space-y-6">
@@ -137,7 +172,9 @@ function Expenses() {
           </h2>
         </div>
 
-        {filteredExpenses.length > 0 ? (
+        {loading ? (
+          <div className="p-12 text-center text-muted">Loading expenses...</div>
+        ) : filteredExpenses.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead className="bg-background">
@@ -153,16 +190,25 @@ function Expenses() {
 
               <tbody>
                 {filteredExpenses.map((expense) => {
-                  const Icon = expense.icon;
+                  const categoryKey = expense.category?.toLowerCase();
+
+                  const style = categoryStyles[categoryKey] || {
+                    icon: FaEllipsisH,
+                    color: "bg-light-indigo text-primary",
+                  };
+
+                  const Icon = style.icon;
 
                   return (
                     <tr
-                      key={expense.id}
+                      key={expense._id}
                       className="border-t border-border hover:bg-background/70 transition"
                     >
                       <td className="px-5 py-4">
                         <div className="flex items-center gap-3 min-w-[170px]">
-                          <div className="w-10 h-10 rounded-xl bg-light-indigo text-primary flex items-center justify-center shrink-0">
+                          <div
+                            className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${style.color}`}
+                          >
                             <Icon />
                           </div>
 
@@ -173,19 +219,19 @@ function Expenses() {
                       </td>
 
                       <td className="px-5 py-4 text-sm text-text">
-                        {t(expense.category)}
+                        {t(categoryKey) || expense.category}
                       </td>
 
                       <td className="px-5 py-4 text-sm text-text">
-                        {expense.paidBy}
+                        {expense.paidBy?.name || "Unknown"}
                       </td>
 
                       <td className="px-5 py-4 text-sm text-muted whitespace-nowrap">
-                        {expense.date}
+                        {formatDate(expense.date)}
                       </td>
 
                       <td className="px-5 py-4 text-sm font-bold text-heading whitespace-nowrap">
-                        ৳{expense.amount.toLocaleString("en-BD")}
+                        ৳{formatAmount(expense.amount)}
                       </td>
 
                       <td className="px-5 py-4">

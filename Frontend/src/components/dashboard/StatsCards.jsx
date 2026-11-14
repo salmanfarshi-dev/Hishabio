@@ -1,56 +1,56 @@
 import {
   FaWallet,
-  FaChartPie,
+  FaCalendarAlt,
   FaMoneyBillWave,
-  FaBalanceScale,
-  FaArrowUp,
-  FaArrowDown,
+  FaUsers,
 } from "react-icons/fa";
+
 import { useLanguage } from "../../context/LanguageContext";
 
-function StatsCards() {
+function StatsCards({ dashboard }) {
   const { t } = useLanguage();
+
+  // Currency formatter
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat("en-BD", {
+      style: "currency",
+      currency: "BDT",
+      maximumFractionDigits: 2,
+    }).format(amount || 0);
+  };
 
   const stats = [
     {
       title: t("totalExpenses"),
-      amount: "৳12,500",
-      description: "This month's total",
+      amount: formatCurrency(dashboard?.totalSpent),
+      description: "Total household spending",
       icon: FaWallet,
       iconBg: "bg-light-indigo",
       iconColor: "text-primary",
-      trend: "+12.5%",
-      trendType: "up",
     },
     {
-      title: t("yourShare"),
-      amount: "৳3,125",
-      description: "Your share of expenses",
-      icon: FaChartPie,
+      title: t("thisMonth"),
+      amount: formatCurrency(dashboard?.monthlySpent),
+      description: "Current month's spending",
+      icon: FaCalendarAlt,
       iconBg: "bg-blue-50",
       iconColor: "text-info",
-      trend: "25%",
-      trendType: "neutral",
     },
     {
-      title: t("youPaid"),
-      amount: "৳5,000",
-      description: "Total amount you paid",
+      title: t("totalSettled"),
+      amount: formatCurrency(dashboard?.totalSettled),
+      description: `${dashboard?.totalSettlements || 0} settlements recorded`,
       icon: FaMoneyBillWave,
       iconBg: "bg-green-50",
       iconColor: "text-success",
-      trend: "+8.2%",
-      trendType: "up",
     },
     {
-      title: t("yourBalance"),
-      amount: "৳1,875",
-      description: "You will receive",
-      icon: FaBalanceScale,
+      title: t("totalMembers"),
+      amount: dashboard?.totalMembers || 0,
+      description: "Members in your household",
+      icon: FaUsers,
       iconBg: "bg-purple-50",
       iconColor: "text-secondary",
-      trend: "Positive",
-      trendType: "up",
     },
   ];
 
@@ -92,15 +92,6 @@ function StatsCards() {
 
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs text-muted">{item.description}</p>
-
-              <span
-                className={`flex items-center gap-1 text-xs font-bold ${
-                  item.trendType === "up" ? "text-success" : "text-info"
-                }`}
-              >
-                {item.trendType === "up" && <FaArrowUp size={10} />}
-                {item.trend}
-              </span>
             </div>
           </div>
         );

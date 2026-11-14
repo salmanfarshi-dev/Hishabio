@@ -1,11 +1,14 @@
-
 const express = require("express");
 
 const router = express.Router();
 
 const {
   createHousehold,
-  getMyHouseholds,  joinHousehold,getHouseholdDetails
+  getMyHouseholds,
+  joinHousehold,
+  getHouseholdDetails,
+  removeHouseholdMember,
+  getHouseholdMembers,
 } = require("../controllers/householdController");
 
 const protect = require("../middleware/authMiddleware");
@@ -17,6 +20,8 @@ const protect = require("../middleware/authMiddleware");
 router.post("/", protect, createHousehold);
 router.get("/my-households", protect, getMyHouseholds);
 router.post("/join", protect, joinHousehold);
+router.get("/:id/members", protect, getHouseholdMembers);
+router.delete("/:id/members/:memberId", protect, removeHouseholdMember);
 router.get("/:id", protect, getHouseholdDetails);
 
 module.exports = router;
