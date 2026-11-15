@@ -48,7 +48,7 @@ function DashboardLayout() {
             currentUser.email?.toLowerCase(),
         );
 
-        setHouseholdRole(currentMember?.role || "");
+      
 
         setHouseholdRole(currentMember?.role || "");
       } catch (error) {

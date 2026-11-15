@@ -30,4 +30,20 @@ API.interceptors.request.use(
   }
 );
 
+API.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem("hishabio-token");
+      localStorage.removeItem("hishabio-user");
+      localStorage.removeItem("hishabio-household-id");
+
+      sessionStorage.removeItem("hishabio-token");
+      sessionStorage.removeItem("hishabio-user");
+      sessionStorage.removeItem("hishabio-household-id");
+    }
+
+    return Promise.reject(error);
+  }
+);
 export default API;

@@ -278,11 +278,47 @@ const getHouseholdMembers = async (req, res) => {
   }
 };
 
+
+
+const removeInvalidMembers = async (req, res) => {
+  try {
+    const household = await Household.findOne({
+      _id: req.params.id,
+      "members.user": req.user.id,
+    }).populate("members.user", "name email");
+
+    if (!household) {
+      return res.status(404).json({
+        success: false,
+        message: "Household not found",
+      });
+    }
+
+    household.members = household.members.filter(
+      (member) => member.user !== null
+    );
+
+    await household.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Invalid members removed successfully",
+      members: household.members,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to remove invalid members",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createHousehold,
   getMyHouseholds,
   joinHousehold,
   getHouseholdDetails,
   removeHouseholdMember,
-  getHouseholdMembers,
+  getHouseholdMembers,removeInvalidMembers
 };

@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaArrowLeft, FaPlus } from "react-icons/fa";
@@ -50,9 +49,7 @@ function AddExpense() {
       }
 
       try {
-        const response = await API.get(
-          `/households/${householdId}/members`
-        );
+        const response = await API.get(`/households/${householdId}/members`);
 
         const memberList = response.data.members || response.data.data || [];
 
@@ -72,7 +69,7 @@ function AddExpense() {
         console.error("Fetch Members Error:", error);
 
         toast.error(
-          error.response?.data?.message || "Failed to load household members"
+          error.response?.data?.message || "Failed to load household members",
         );
       } finally {
         setLoadingMembers(false);
@@ -156,9 +153,7 @@ function AddExpense() {
     } catch (error) {
       console.error("Add Expense Error:", error);
 
-      toast.error(
-        error.response?.data?.message || "Failed to add expense"
-      );
+      toast.error(error.response?.data?.message || "Failed to add expense");
     } finally {
       setSubmitting(false);
     }
@@ -247,12 +242,11 @@ function AddExpense() {
               required
               className="w-full px-4 py-3 rounded-xl border border-border bg-surface text-heading outline-none focus:border-primary transition"
             >
-              <option value="">{t("selectCategory")}</option>
-              <option value="food">{t("food")}</option>
-              <option value="transport">{t("transport")}</option>
-              <option value="shopping">{t("shopping")}</option>
-              <option value="utilities">{t("utilities")}</option>
-              <option value="others">{t("others")}</option>
+              <option value="Food">{t("food")}</option>
+              <option value="Transport">{t("transport")}</option>
+              <option value="Shopping">{t("shopping")}</option>
+              <option value="Utilities">{t("utilities")}</option>
+              <option value="Others">{t("others")}</option>
             </select>
           </div>
 
@@ -329,9 +323,7 @@ function AddExpense() {
             ==================== */}
 
         <div className="rounded-xl bg-light-indigo p-4">
-          <p className="text-sm font-semibold text-primary">
-            Equal Split
-          </p>
+          <p className="text-sm font-semibold text-primary">Equal Split</p>
 
           <p className="text-sm text-text mt-1">
             This expense will be divided equally among all {members.length}{" "}

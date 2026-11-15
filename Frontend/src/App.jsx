@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 
@@ -31,7 +30,7 @@ import Members from "./pages/Members";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
-
+import EditExpense from "./pages/EditExpense";
 // ====================
 // Layout & Routes
 // ====================
@@ -60,15 +59,13 @@ function App() {
             ==================== */}
 
         <Route element={<ProtectedRoute />}>
-          <Route
-            path="/household-setup"
-            element={<HouseholdSetup />}
-          />
+          <Route path="/household-setup" element={<HouseholdSetup />} />
 
           <Route element={<DashboardLayout />}>
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/expenses/add" element={<AddExpense />} />
+            <Route path="/expenses/edit/:id" element={<EditExpense />} />
             <Route path="/balances" element={<Balances />} />
             <Route path="/settlements" element={<Settlements />} />
             <Route path="/members" element={<Members />} />

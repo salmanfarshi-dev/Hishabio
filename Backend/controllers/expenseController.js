@@ -326,58 +326,63 @@ const getHouseholdBalances = async (req, res) => {
     });
 
     // Calculate member balances
-    const balances = household.members.map((member) => {
-      const user = member.user;
+    const balances = household.members
+      .filter((member) => member.user !== null)
+      .map((member) => {
+        const user = member.user;
 
-      let totalPaid = 0;
-      let totalShare = 0;
+        let totalPaid = 0;
+        let totalShare = 0;
 
-      expenses.forEach((expense) => {
-        // Calculate total amount paid by this member
-        if (expense.paidBy.toString() === user._id.toString()) {
-          totalPaid += expense.amount;
-        }
+        expenses.forEach((expense) => {
+          // Calculate total amount paid by this member
+          if (expense.paidBy.toString() === user._id.toString()) {
+            totalPaid += expense.amount;
+          }
 
-        // Calculate total share of this member
-        expense.participants.forEach((participant) => {
-          if (participant.user.toString() === user._id.toString()) {
-            totalShare += participant.shareAmount;
+          // Calculate total share of this member
+          expense.participants.forEach((participant) => {
+            if (
+              participant.user &&
+              participant.user.toString() === user._id.toString()
+            ) {
+              totalShare += participant.shareAmount;
+            }
+          });
+        });
+
+        // Calculate final balance
+        // Calculate expense balance
+        let balance = totalPaid - totalShare;
+
+        // Adjust balance using settlements
+        settlements.forEach((settlement) => {
+          // Person who paid gets a positive adjustment
+          if (settlement.paidBy.toString() === user._id.toString()) {
+            balance += settlement.amount;
+          }
+
+          // Person who received gets a negative adjustment
+          if (settlement.receivedBy.toString() === user._id.toString()) {
+            balance -= settlement.amount;
           }
         });
+
+        // Final balance
+        balance = Number(balance.toFixed(2));
+
+        return {
+          user: {
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            profileImage: user.profileImage,
+          },
+          totalPaid: Number(totalPaid.toFixed(2)),
+          totalShare: Number(totalShare.toFixed(2)),
+          balance,
+        };
       });
-
-      // Calculate final balance
-      // Calculate expense balance
-      let balance = totalPaid - totalShare;
-
-      // Adjust balance using settlements
-      settlements.forEach((settlement) => {
-        // Person who paid gets a positive adjustment
-        if (settlement.paidBy.toString() === user._id.toString()) {
-          balance += settlement.amount;
-        }
-
-        // Person who received gets a negative adjustment
-        if (settlement.receivedBy.toString() === user._id.toString()) {
-          balance -= settlement.amount;
-        }
-      });
-
-      // Final balance
-      balance = Number(balance.toFixed(2));
-
-      return {
-        user: {
-          _id: user._id,
-          name: user.name,
-          email: user.email,
-          profileImage: user.profileImage,
-        },
-        totalPaid: Number(totalPaid.toFixed(2)),
-        totalShare: Number(totalShare.toFixed(2)),
-        balance,
-      };
-    });
 
     res.status(200).json({
       success: true,
@@ -392,10 +397,79 @@ const getHouseholdBalances = async (req, res) => {
     });
   }
 };
+
+const cleanupExpenseParticipants = async (req, res) => {
+  try {
+    const expense = await Expense.findById(req.params.id);
+
+    if (!expense) {
+      return res.status(404).json({
+        success: false,
+        message: "Expense not found",
+      });
+    }
+
+    const household = await Household.findOne({
+      _id: expense.household,
+      "members.user": req.user.id,
+    });
+
+    if (!household) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
+
+    // Get valid household member IDs
+    const validMemberIds = household.members
+      .filter((member) => member.user)
+      .map((member) => member.user.toString());
+
+    if (validMemberIds.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No valid household members found",
+      });
+    }
+
+    // Calculate equal split accurately in paisa
+    const totalPaisa = Math.round(expense.amount * 100);
+    const baseShare = Math.floor(totalPaisa / validMemberIds.length);
+    const remainder = totalPaisa % validMemberIds.length;
+
+    // Recreate participants for all valid members
+    expense.participants = validMemberIds.map((userId, index) => ({
+      user: userId,
+      shareAmount: (baseShare + (index < remainder ? 1 : 0)) / 100,
+    }));
+
+    await expense.save();
+
+    const updatedExpense = await Expense.findById(expense._id)
+      .populate("paidBy", "name email")
+      .populate("participants.user", "name email profileImage")
+      .populate("createdBy", "name email");
+
+    res.status(200).json({
+      success: true,
+      message: "Expense participants and shares updated successfully",
+      expense: updatedExpense,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to update expense participants",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   addExpense,
   getAllExpenses,
   updateExpense,
   deleteExpense,
   getHouseholdBalances,
+  cleanupExpenseParticipants,
 };
