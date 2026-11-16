@@ -1,18 +1,10 @@
-
 import axios from "axios";
 
-// ====================
-// Axios Instance
-// ====================
-
 const API = axios.create({
-  baseURL: "http://localhost:5000/api/v1",
+  baseURL: "https://hishabio-backend.onrender.com/api/v1",
 });
 
-// ====================
 // Request Interceptor
-// ====================
-
 API.interceptors.request.use(
   (config) => {
     const token =
@@ -25,11 +17,10 @@ API.interceptors.request.use(
 
     return config;
   },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (error) => Promise.reject(error),
 );
 
+// Response Interceptor
 API.interceptors.response.use(
   (response) => response,
   (error) => {
@@ -44,6 +35,7 @@ API.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
+
 export default API;
