@@ -1,6 +1,7 @@
 const Expense = require("../models/Expense");
 const Household = require("../models/Household");
 const Settlement = require("../models/Settlement");
+const createNotification = require("../utils/createNotification");
 // ====================
 // Add Expense
 // ====================
@@ -85,6 +86,14 @@ const addExpense = async (req, res) => {
       .populate("paidBy", "name email")
       .populate("createdBy", "name email")
       .populate("participants.user", "name email profileImage");
+    await createNotification({
+      household,
+      senderId: req.user.id,
+      title: "New Expense Added",
+      message: `${title} expense of ৳${totalAmount} was added.`,
+      type: "expense_added",
+      relatedId: expense._id,
+    });
 
     res.status(201).json({
       success: true,
@@ -226,6 +235,15 @@ const updateExpense = async (req, res) => {
       .populate("participants.user", "name email profileImage")
       .populate("createdBy", "name email");
 
+    await createNotification({
+      household,
+      senderId: req.user.id,
+      title: "Expense Updated",
+      message: `${updatedExpense.title} expense was updated.`,
+      type: "expense_updated",
+      relatedId: expense._id,
+    });
+
     res.status(200).json({
       success: true,
       message: "Expense updated successfully",
@@ -270,7 +288,14 @@ const deleteExpense = async (req, res) => {
         message: "You are not allowed to delete this expense",
       });
     }
-
+    await createNotification({
+      household,
+      senderId: req.user.id,
+      title: "Expense Deleted",
+      message: `${expense.title} expense was deleted.`,
+      type: "expense_deleted",
+      relatedId: expense._id,
+    });
     // Delete expense
     await Expense.findByIdAndDelete(id);
 
@@ -395,18 +420,20 @@ const getHouseholdBalances = async (req, res) => {
 
       // Adjust balance using settlements
       settlements.forEach((settlement) => {
+        // Person who pays: balance decreases
         if (
           settlement.paidBy &&
           settlement.paidBy._id.toString() === user._id.toString()
         ) {
-          balance += settlement.amount;
+          balance -= settlement.amount;
         }
 
+        // Person who receives: balance increases
         if (
           settlement.receivedBy &&
           settlement.receivedBy._id.toString() === user._id.toString()
         ) {
-          balance -= settlement.amount;
+          balance += settlement.amount;
         }
       });
 

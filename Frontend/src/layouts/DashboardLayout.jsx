@@ -1,17 +1,20 @@
 import { useEffect, useState } from "react";
-import { FaBars, FaBell, FaGlobe } from "react-icons/fa";
+import { FaBars, FaGlobe } from "react-icons/fa";
 import { useLanguage } from "../context/LanguageContext";
 import Sidebar from "../components/dashboard/Sidebar";
+import NotificationDropdown from "../components/dashboard/NotificationDropdown";
 import { Link, Outlet } from "react-router-dom";
 import API from "../api/axios";
 
 function DashboardLayout() {
   const [isOpen, setIsOpen] = useState(false);
+
   const [user, setUser] = useState({
     name: "",
     email: "",
     profileImage: "",
   });
+
   const [householdRole, setHouseholdRole] = useState("");
 
   const { language, toggleLanguage, t } = useLanguage();
@@ -19,8 +22,8 @@ function DashboardLayout() {
   useEffect(() => {
     const fetchUserInfo = async () => {
       try {
-        // Get logged-in user
         const response = await API.get("/auth/me");
+
         const currentUser =
           response.data.user || response.data.data || response.data;
 
@@ -30,12 +33,10 @@ function DashboardLayout() {
           profileImage: currentUser.profileImage || "",
         });
 
-        // Get active household
         const householdId = localStorage.getItem("hishabio-household-id");
 
         if (!householdId) return;
 
-        // Get household members
         const membersResponse = await API.get(
           `/households/${householdId}/members`,
         );
@@ -47,8 +48,6 @@ function DashboardLayout() {
             member.user?.email?.toLowerCase() ===
             currentUser.email?.toLowerCase(),
         );
-
-      
 
         setHouseholdRole(currentMember?.role || "");
       } catch (error) {
@@ -87,6 +86,7 @@ function DashboardLayout() {
               <h2 className="text-lg sm:text-xl font-heading font-bold text-heading">
                 Hishabio
               </h2>
+
               <p className="hidden sm:block text-xs text-muted">
                 {t("overview")}
               </p>
@@ -102,10 +102,7 @@ function DashboardLayout() {
               {language === "en" ? "বাংলা" : "English"}
             </button>
 
-            <button className="relative w-10 h-10 flex items-center justify-center rounded-xl bg-background text-muted hover:text-primary transition">
-              <FaBell size={17} />
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-danger border-2 border-surface" />
-            </button>
+            <NotificationDropdown />
 
             <div className="hidden sm:flex items-center gap-3 pl-3 border-l border-border">
               <Link to="/profile" className="flex items-center gap-3">
@@ -125,6 +122,7 @@ function DashboardLayout() {
                   <p className="text-sm font-semibold text-heading">
                     {user.name || "User"}
                   </p>
+
                   <p className="text-xs text-muted capitalize">
                     {householdRole}
                   </p>

@@ -8,6 +8,7 @@ const app = express();
 const expenseRoutes = require("./routes/expenseRoutes");
 const settlementRoutes = require("./routes/settlementRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
 // Middleware
 
 app.use(cors());
@@ -17,6 +18,7 @@ app.use("/api/v1/households", householdRoutes);
 app.use("/api/v1/expenses", expenseRoutes);
 app.use("/api/v1/settlements", settlementRoutes);
 app.use("/api/v1/dashboard", dashboardRoutes);
+app.use("/api/v1/notifications", notificationRoutes);
 
 // Test Route
 

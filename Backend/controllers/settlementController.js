@@ -1,5 +1,8 @@
 const Settlement = require("../models/Settlement");
 const Household = require("../models/Household");
+const Expense = require("../models/Expense");
+const mongoose = require("mongoose");
+const createNotification = require("../utils/createNotification");
 
 // ====================
 // Create Settlement
@@ -9,7 +12,6 @@ const createSettlement = async (req, res) => {
   try {
     const { householdId, receivedBy, amount, date, note } = req.body;
 
-    // Check required fields
     if (!householdId || !receivedBy || amount === undefined) {
       return res.status(400).json({
         success: false,
@@ -17,7 +19,16 @@ const createSettlement = async (req, res) => {
       });
     }
 
-    // Validate amount
+    if (
+      !mongoose.Types.ObjectId.isValid(householdId) ||
+      !mongoose.Types.ObjectId.isValid(receivedBy)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid household or receiver ID",
+      });
+    }
+
     const totalAmount = Number(amount);
 
     if (!Number.isFinite(totalAmount) || totalAmount <= 0) {
@@ -27,7 +38,7 @@ const createSettlement = async (req, res) => {
       });
     }
 
-    // Check household membership
+    // Current user must be an active household member
     const household = await Household.findOne({
       _id: householdId,
       "members.user": req.user.id,
@@ -40,19 +51,6 @@ const createSettlement = async (req, res) => {
       });
     }
 
-    // Check receiver membership
-    const receiverExists = household.members.some(
-      (member) => member.user.toString() === receivedBy,
-    );
-
-    if (!receiverExists) {
-      return res.status(400).json({
-        success: false,
-        message: "Receiver must be a household member",
-      });
-    }
-
-    // Prevent sending settlement to yourself
     if (req.user.id === receivedBy) {
       return res.status(400).json({
         success: false,
@@ -60,21 +58,50 @@ const createSettlement = async (req, res) => {
       });
     }
 
-    // Create settlement
+    // Receiver can be an active OR historical household member.
+    // Check whether the receiver participated in any old expense.
+    const receiverInExpense = await Expense.exists({
+      household: householdId,
+      $or: [{ paidBy: receivedBy }, { "participants.user": receivedBy }],
+    });
+
+    // Also check previous settlements
+    const receiverInSettlement = await Settlement.exists({
+      household: householdId,
+      $or: [{ paidBy: receivedBy }, { receivedBy: receivedBy }],
+    });
+
+    const isActiveReceiver = household.members.some(
+      (member) => member.user.toString() === receivedBy,
+    );
+
+    if (!isActiveReceiver && !receiverInExpense && !receiverInSettlement) {
+      return res.status(400).json({
+        success: false,
+        message: "Receiver is not associated with this household",
+      });
+    }
+
     const settlement = await Settlement.create({
       household: householdId,
       paidBy: req.user.id,
       receivedBy,
-      amount: totalAmount,
+      amount: Math.round(totalAmount * 100) / 100,
       date: date || Date.now(),
       note: note || "",
     });
 
-    // Get populated settlement
     const savedSettlement = await Settlement.findById(settlement._id)
       .populate("paidBy", "name email profileImage")
       .populate("receivedBy", "name email profileImage");
-
+    await createNotification({
+      household,
+      senderId: req.user.id,
+      title: "New Settlement",
+      message: `A payment of ৳${totalAmount} was sent to ${savedSettlement.receivedBy.name}.`,
+      type: "settlement",
+      relatedId: settlement._id,
+    });
     res.status(201).json({
       success: true,
       message: "Settlement recorded successfully",
@@ -89,7 +116,6 @@ const createSettlement = async (req, res) => {
   }
 };
 
-
 // ====================
 // Get All Settlements
 // ====================
@@ -98,7 +124,6 @@ const getAllSettlements = async (req, res) => {
   try {
     const { householdId } = req.query;
 
-    // Check household ID
     if (!householdId) {
       return res.status(400).json({
         success: false,
@@ -106,7 +131,6 @@ const getAllSettlements = async (req, res) => {
       });
     }
 
-    // Check household membership
     const household = await Household.findOne({
       _id: householdId,
       "members.user": req.user.id,
@@ -119,7 +143,6 @@ const getAllSettlements = async (req, res) => {
       });
     }
 
-    // Get all settlements
     const settlements = await Settlement.find({
       household: householdId,
     })
@@ -140,6 +163,8 @@ const getAllSettlements = async (req, res) => {
     });
   }
 };
+
 module.exports = {
-  createSettlement,getAllSettlements,
+  createSettlement,
+  getAllSettlements,
 };
