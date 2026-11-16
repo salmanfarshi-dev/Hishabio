@@ -34,7 +34,7 @@ import EditExpense from "./pages/EditExpense";
 // ====================
 // Layout & Routes
 // ====================
-
+import ResetPassword from "./pages/ResetPassword";
 import DashboardLayout from "./layouts/DashboardLayout";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -53,7 +53,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
         {/* ====================
             Protected Routes
             ==================== */}

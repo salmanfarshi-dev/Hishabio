@@ -187,12 +187,15 @@ const removeHouseholdMember = async (req, res) => {
       (member) => member.user.toString() === req.user.id
     );
 
-    if (!currentMember || currentMember.role !== "admin") {
-      return res.status(403).json({
-        success: false,
-        message: "Only household admins can remove members",
-      });
-    }
+   const isOwner =
+  household.createdBy.toString() === req.user.id;
+
+if (!isOwner || !currentMember || currentMember.role !== "admin") {
+  return res.status(403).json({
+    success: false,
+    message: "Only the household owner can remove members",
+  });
+}
 
     if (household.createdBy.toString() === memberId) {
       return res.status(400).json({

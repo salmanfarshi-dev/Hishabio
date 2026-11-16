@@ -1,5 +1,17 @@
 import { useEffect, useState } from "react";
-import { FaGlobe, FaBell, FaLock, FaUserCog, FaSave } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
+
+import {
+  FaGlobe,
+  FaBell,
+  FaLock,
+  FaUserCog,
+  FaSave,
+  FaCoins,
+  FaSignOutAlt,
+  FaShieldAlt,
+  FaCheckCircle,
+} from "react-icons/fa";
 
 import { useLanguage } from "../context/LanguageContext";
 import toast from "react-hot-toast";
@@ -11,25 +23,50 @@ const defaultNotifications = {
   email: true,
 };
 
+const currencies = [
+  { value: "BDT", label: "BDT — Bangladeshi Taka (৳)" },
+  { value: "USD", label: "USD — US Dollar ($)" },
+  { value: "EUR", label: "EUR — Euro (€)" },
+  { value: "GBP", label: "GBP — British Pound (£)" },
+];
+
 function Settings() {
   const { language, setLanguage, t } = useLanguage();
+  const navigate = useNavigate();
 
   const [notifications, setNotifications] = useState(defaultNotifications);
 
-  useEffect(() => {
-    const savedSettings = localStorage.getItem("hishabio-notifications");
+  const [currency, setCurrency] = useState("BDT");
+  const [saving, setSaving] = useState(false);
 
-    if (savedSettings) {
-      try {
+  // =========================
+  // Load Settings
+  // =========================
+
+  useEffect(() => {
+    try {
+      const savedNotifications = localStorage.getItem("hishabio-notifications");
+
+      const savedCurrency = localStorage.getItem("hishabio-currency");
+
+      if (savedNotifications) {
         setNotifications({
           ...defaultNotifications,
-          ...JSON.parse(savedSettings),
+          ...JSON.parse(savedNotifications),
         });
-      } catch (error) {
-        console.error("Settings loading error:", error);
       }
+
+      if (savedCurrency) {
+        setCurrency(savedCurrency);
+      }
+    } catch (error) {
+      console.error("Settings loading error:", error);
     }
   }, []);
+
+  // =========================
+  // Notification Toggle
+  // =========================
 
   const handleNotification = (name) => {
     setNotifications((previous) => ({
@@ -38,12 +75,20 @@ function Settings() {
     }));
   };
 
+  // =========================
+  // Save Settings
+  // =========================
+
   const handleSaveSettings = () => {
     try {
+      setSaving(true);
+
       localStorage.setItem(
         "hishabio-notifications",
         JSON.stringify(notifications),
       );
+
+      localStorage.setItem("hishabio-currency", currency);
 
       toast.success(
         language === "bn"
@@ -52,9 +97,39 @@ function Settings() {
       );
     } catch (error) {
       console.error("Settings save error:", error);
+
       toast.error("Failed to save settings.");
+    } finally {
+      setSaving(false);
     }
   };
+
+  // =========================
+  // Logout
+  // =========================
+
+  const handleLogout = () => {
+    const confirmed = window.confirm(
+      language === "bn"
+        ? "আপনি কি নিশ্চিতভাবে Logout করতে চান?"
+        : "Are you sure you want to logout?",
+    );
+
+    if (!confirmed) return;
+
+    localStorage.removeItem("hishabio-token");
+    sessionStorage.removeItem("hishabio-token");
+
+    toast.success(
+      language === "bn" ? "সফলভাবে Logout হয়েছে" : "Logged out successfully",
+    );
+
+    navigate("/login", { replace: true });
+  };
+
+  // =========================
+  // Notification Options
+  // =========================
 
   const notificationOptions = [
     {
@@ -78,6 +153,10 @@ function Settings() {
       description: t("emailNotificationsDescription"),
     },
   ];
+
+  // =========================
+  // UI
+  // =========================
 
   return (
     <div className="space-y-6">
@@ -110,6 +189,8 @@ function Settings() {
           </div>
         </div>
 
+        {/* Language */}
+
         <div className="border-t border-border pt-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -132,6 +213,43 @@ function Settings() {
             </select>
           </div>
         </div>
+
+        {/* Currency */}
+
+        <div className="border-t border-border pt-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <FaCoins className="text-primary" />
+
+              <div>
+                <p className="font-semibold text-heading">
+                  Currency Preference
+                </p>
+
+                <p className="text-xs text-muted">
+                  Choose your preferred display currency
+                </p>
+              </div>
+            </div>
+
+            <select
+              value={currency}
+              onChange={(e) => setCurrency(e.target.value)}
+              className="px-4 py-2.5 rounded-xl border border-border bg-surface text-heading outline-none focus:border-primary"
+            >
+              {currencies.map((item) => (
+                <option key={item.value} value={item.value}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <p className="text-xs text-muted mt-3">
+            This preference is saved locally. It does not convert existing
+            expense amounts or exchange rates.
+          </p>
+        </div>
       </div>
 
       {/* Notification Settings */}
@@ -151,7 +269,7 @@ function Settings() {
           </div>
         </div>
 
-        <div className="border-t border-border pt-2 space-y-5">
+        <div className="border-t border-border pt-5 space-y-5">
           {notificationOptions.map((item) => (
             <div
               key={item.key}
@@ -166,6 +284,7 @@ function Settings() {
               <button
                 type="button"
                 role="switch"
+                aria-label={item.title}
                 aria-checked={notifications[item.key]}
                 onClick={() => handleNotification(item.key)}
                 className={`relative w-12 h-6 rounded-full transition shrink-0 ${
@@ -173,7 +292,7 @@ function Settings() {
                 }`}
               >
                 <span
-                  className={`absolute top-1 w-4 h-4 rounded-full bg-surface transition-all ${
+                  className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all ${
                     notifications[item.key] ? "left-7" : "left-1"
                   }`}
                 />
@@ -201,35 +320,87 @@ function Settings() {
         </div>
 
         <div className="border-t border-border mt-5 pt-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div>
-            <p className="font-semibold text-heading">{t("changePassword")}</p>
+          <div className="flex items-start gap-3">
+            <FaShieldAlt className="text-success mt-1" />
 
-            <p className="text-xs text-muted mt-1">
-              {t("changePasswordDescription")}
-            </p>
+            <div>
+              <p className="font-semibold text-heading">
+                {t("changePassword")}
+              </p>
+
+              <p className="text-xs text-muted mt-1">
+                {t("changePasswordDescription")}
+              </p>
+            </div>
           </div>
 
           <button
             type="button"
-            disabled
-            className="px-5 py-2.5 rounded-xl border border-border text-muted font-semibold cursor-not-allowed"
+            onClick={() => navigate("/forgot-password")}
+            className="px-5 py-2.5 rounded-xl border border-border text-heading font-semibold hover:border-primary hover:text-primary transition"
           >
-            {t("comingSoon")}
+            Reset Password
           </button>
         </div>
       </div>
 
       {/* Save Settings */}
 
-      <div className="flex justify-end">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-sm text-muted">
+          <FaCheckCircle className="text-success" />
+          Your preferences are stored on this device.
+        </div>
+
         <button
           type="button"
           onClick={handleSaveSettings}
-          className="btn-primary"
+          disabled={saving}
+          className="btn-primary disabled:opacity-60"
         >
           <FaSave />
-          {t("saveSettings")}
+
+          {saving ? "Saving..." : t("saveSettings")}
         </button>
+      </div>
+
+      {/* Danger Zone */}
+
+      <div className="card p-5 sm:p-6 border border-red-200">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+            <FaSignOutAlt />
+          </div>
+
+          <div>
+            <h2 className="font-heading font-bold text-heading">Danger Zone</h2>
+
+            <p className="text-sm text-muted">
+              Sign out from your current account
+            </p>
+          </div>
+        </div>
+
+        <div className="border-t border-border mt-5 pt-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <p className="font-semibold text-heading">Logout</p>
+
+            <p className="text-xs text-muted mt-1">
+              You will need to login again to access your household.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="px-5 py-2.5 rounded-xl bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition"
+          >
+            <span className="flex items-center gap-2">
+              <FaSignOutAlt />
+              Logout
+            </span>
+          </button>
+        </div>
       </div>
     </div>
   );

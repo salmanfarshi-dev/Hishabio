@@ -3,33 +3,62 @@ import { Link } from "react-router-dom";
 import { FaArrowLeft, FaEnvelope, FaLock, FaCheckCircle } from "react-icons/fa";
 import { useLanguage } from "../context/LanguageContext";
 import toast from "react-hot-toast";
+import axios from "axios";
+
 function ForgotPassword() {
   const { language, toggleLanguage, t } = useLanguage();
 
   const [email, setEmail] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  // ====================
   // Handle Form Submit
-  // ====================
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!email.trim()) return;
+    if (!email.trim()) {
+      toast.error(
+        language === "bn" ? "ইমেইল লিখুন" : "Please enter your email",
+      );
+      return;
+    }
 
-    console.log("Reset email:", email);
-    toast.success(t("resetEmailSent"));
-    setSubmitted(true);
+    try {
+      setLoading(true);
+
+      const response = await axios.post(
+        "http://localhost:5000/api/v1/auth/forgot-password",
+        {
+          email: email.trim(),
+        },
+      );
+
+      toast.success(
+        response.data.message ||
+          (language === "bn"
+            ? "Reset link পাঠানো হয়েছে"
+            : "Reset link sent successfully"),
+      );
+
+      setSubmitted(true);
+    } catch (error) {
+      console.error("Forgot Password Error:", error);
+
+      toast.error(
+        error.response?.data?.message ||
+          (language === "bn"
+            ? "ইমেইল পাঠানো যায়নি। আবার চেষ্টা করুন।"
+            : "Failed to send email. Please try again."),
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4 sm:p-6">
       <div className="w-full max-w-[1100px] grid lg:grid-cols-2 overflow-hidden rounded-3xl bg-surface border border-border shadow-xl">
-        {/* ====================
-            Left Branding Panel
-            ==================== */}
-
+        {/* Left Branding Panel */}
         <div className="hidden lg:flex flex-col justify-between bg-gradient-to-br from-primary to-secondary p-12 text-white relative overflow-hidden">
           <div className="absolute w-72 h-72 rounded-full border border-white/10 -top-20 -right-20" />
           <div className="absolute w-96 h-96 rounded-full border border-white/10 -bottom-40 -left-20" />
@@ -66,15 +95,9 @@ function ForgotPassword() {
           </p>
         </div>
 
-        {/* ====================
-            Forgot Password Form
-            ==================== */}
-
+        {/* Forgot Password Form */}
         <div className="p-6 sm:p-10 lg:p-14 flex flex-col justify-center">
-          {/* ====================
-              Top Navigation
-              ==================== */}
-
+          {/* Top Navigation */}
           <div className="flex items-center justify-between mb-10">
             <Link to="/" className="lg:hidden">
               <h1 className="text-2xl font-heading font-extrabold text-primary">
@@ -116,10 +139,7 @@ function ForgotPassword() {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-6">
-                {/* ====================
-                    Email Input
-                    ==================== */}
-
+                {/* Email Input */}
                 <div>
                   <label className="block text-sm font-semibold text-heading mb-2">
                     {t("emailAddress")}
@@ -134,17 +154,23 @@ function ForgotPassword() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder={t("enterEmail")}
                       required
-                      className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-border bg-background text-heading outline-none focus:border-primary focus:ring-4 focus:ring-light-indigo transition"
+                      disabled={loading}
+                      className="w-full pl-12 pr-4 py-3.5 rounded-xl border border-border bg-background text-heading outline-none focus:border-primary focus:ring-4 focus:ring-light-indigo transition disabled:opacity-60"
                     />
                   </div>
                 </div>
 
-                {/* ====================
-                    Submit Button
-                    ==================== */}
-
-                <button type="submit" className="btn-primary w-full py-3.5">
-                  {t("sendResetLink")}
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn-primary w-full py-3.5 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {loading
+                    ? language === "bn"
+                      ? "পাঠানো হচ্ছে..."
+                      : "Sending..."
+                    : t("sendResetLink")}
                 </button>
               </form>
             </>
@@ -175,10 +201,7 @@ function ForgotPassword() {
             </div>
           )}
 
-          {/* ====================
-              Back To Login
-              ==================== */}
-
+          {/* Back To Login */}
           <div className="mt-8 text-center">
             <p className="text-sm text-muted">
               {t("rememberPassword")}{" "}

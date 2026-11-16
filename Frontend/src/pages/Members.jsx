@@ -1,12 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  FaUsers,
-  FaUserPlus,
-  FaEllipsisH,
-  FaCrown,
-  FaCopy,
-} from "react-icons/fa";
+import { FaUsers, FaUserPlus, FaCrown, FaCopy, FaTrash } from "react-icons/fa";
 import { useLanguage } from "../context/LanguageContext";
 import API from "../api/axios";
 import toast from "react-hot-toast";
@@ -16,8 +10,11 @@ function Members() {
   const navigate = useNavigate();
 
   const [members, setMembers] = useState([]);
+  const [balances, setBalances] = useState([]);
   const [household, setHousehold] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isOwner, setIsOwner] = useState(false);
+  const [removingMemberId, setRemovingMemberId] = useState("");
 
   // ====================
   // Member Information
@@ -57,7 +54,7 @@ function Members() {
       .join("");
 
   // ====================
-  // Fetch Members
+  // Fetch Members & Balances
   // ====================
 
   useEffect(() => {
@@ -72,9 +69,16 @@ function Members() {
       try {
         setLoading(true);
 
-        const [membersResponse, householdResponse] = await Promise.all([
+        const [
+          membersResponse,
+          householdResponse,
+          currentUserResponse,
+          balancesResponse,
+        ] = await Promise.all([
           API.get(`/households/${householdId}/members`),
           API.get(`/households/${householdId}`),
+          API.get("/auth/me"),
+          API.get(`/expenses/balances?householdId=${householdId}`),
         ]);
 
         const memberList =
@@ -85,8 +89,31 @@ function Members() {
           householdResponse.data.data ||
           householdResponse.data;
 
+        const currentUser =
+          currentUserResponse.data.user ||
+          currentUserResponse.data.data ||
+          currentUserResponse.data;
+
+        const currentUserId = currentUser?._id || currentUser?.id;
+
+        const creatorId =
+          typeof householdData.createdBy === "object"
+            ? householdData.createdBy?._id || householdData.createdBy?.id
+            : householdData.createdBy;
+
+        const balanceList = balancesResponse.data.balances || [];
+
         setMembers(memberList);
         setHousehold(householdData);
+        setBalances(balanceList);
+
+        setIsOwner(
+          Boolean(
+            currentUserId &&
+            creatorId &&
+            String(currentUserId) === String(creatorId),
+          ),
+        );
       } catch (error) {
         console.error("Fetch Members Error:", error);
 
@@ -100,6 +127,33 @@ function Members() {
   }, [navigate]);
 
   // ====================
+  // Combine Active & Removed Members
+  // ====================
+
+  const activeMemberIds = new Set(
+    members.map((member) => String(getMemberId(member))),
+  );
+
+  const displayMembers = [...members];
+
+  balances.forEach((balance) => {
+    const user = balance.user;
+
+    if (!user?._id) return;
+
+    const alreadyExists = displayMembers.some(
+      (member) => String(getMemberId(member)) === String(user._id),
+    );
+
+    if (!alreadyExists) {
+      displayMembers.push({
+        user,
+        role: "removed",
+      });
+    }
+  });
+
+  // ====================
   // Copy Invite Code
   // ====================
 
@@ -111,10 +165,57 @@ function Members() {
 
     try {
       await navigator.clipboard.writeText(household.inviteCode);
+
       toast.success("Invite code copied!");
     } catch (error) {
       console.error("Copy Invite Code Error:", error);
       toast.error("Could not copy invite code");
+    }
+  };
+
+  // ====================
+  // Remove Member
+  // ====================
+
+  const handleRemoveMember = async (memberId, memberName) => {
+    if (!isOwner) {
+      toast.error("Only the household owner can remove members");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `Are you sure you want to remove ${memberName} from this household?`,
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setRemovingMemberId(memberId);
+
+      const householdId = localStorage.getItem("hishabio-household-id");
+
+      await API.delete(`/households/${householdId}/members/${memberId}`);
+
+      setMembers((previousMembers) =>
+        previousMembers.filter(
+          (member) => String(getMemberId(member)) !== String(memberId),
+        ),
+      );
+
+      toast.success("Member removed successfully");
+
+      // Refresh balance data to preserve historical records
+      const balanceResponse = await API.get(
+        `/expenses/balances?householdId=${householdId}`,
+      );
+
+      setBalances(balanceResponse.data.balances || []);
+    } catch (error) {
+      console.error("Remove Member Error:", error);
+
+      toast.error(error.response?.data?.message || "Failed to remove member");
+    } finally {
+      setRemovingMemberId("");
     }
   };
 
@@ -128,11 +229,13 @@ function Members() {
 
   const adminName = adminMember ? getMemberName(adminMember) : "Not available";
 
+  // ====================
+  // UI
+  // ====================
+
   return (
     <div className="space-y-6">
-      {/* ====================
-          Page Header
-          ==================== */}
+      {/* Page Header */}
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
@@ -149,9 +252,7 @@ function Members() {
         </button>
       </div>
 
-      {/* ====================
-          Members Summary
-          ==================== */}
+      {/* Members Summary */}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <div className="card p-5 flex items-center gap-4">
@@ -183,9 +284,7 @@ function Members() {
         </div>
       </div>
 
-      {/* ====================
-          Invite Code
-          ==================== */}
+      {/* Invite Code */}
 
       {household?.inviteCode && (
         <div className="card p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -216,9 +315,7 @@ function Members() {
         </div>
       )}
 
-      {/* ====================
-          Members List
-          ==================== */}
+      {/* Members List */}
 
       <div className="card overflow-hidden">
         <div className="p-5 border-b border-border">
@@ -233,27 +330,43 @@ function Members() {
 
         {loading ? (
           <div className="p-12 text-center text-muted">Loading members...</div>
-        ) : members.length > 0 ? (
+        ) : displayMembers.length > 0 ? (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[700px] text-left">
+            <table className="w-full min-w-[750px] text-left">
               <thead className="bg-surface-hover text-muted text-sm">
                 <tr>
                   <th className="px-5 py-4 font-semibold">{t("member")}</th>
+
                   <th className="px-5 py-4 font-semibold">{t("role")}</th>
+
                   <th className="px-5 py-4 font-semibold">{t("paid")}</th>
+
                   <th className="px-5 py-4 font-semibold">{t("share")}</th>
+
                   <th className="px-5 py-4 font-semibold">{t("actions")}</th>
                 </tr>
               </thead>
 
               <tbody>
-                {members.map((member) => {
+                {displayMembers.map((member) => {
                   const memberId = getMemberId(member);
                   const name = getMemberName(member);
                   const email = getMemberEmail(member);
                   const image = getMemberImage(member);
-                  const role = getMemberRole(member);
+
+                  const isActive = activeMemberIds.has(String(memberId));
+
+                  const role = isActive ? getMemberRole(member) : "removed";
+
                   const isAdmin = role === "admin";
+
+                  const memberBalance = balances.find(
+                    (item) => String(item.user?._id) === String(memberId),
+                  );
+
+                  const totalPaid = memberBalance?.totalPaid || 0;
+
+                  const totalShare = memberBalance?.totalShare || 0;
 
                   return (
                     <tr
@@ -266,7 +379,9 @@ function Members() {
                             <img
                               src={image}
                               alt={name}
-                              className="w-10 h-10 rounded-full object-cover"
+                              className={`w-10 h-10 rounded-full object-cover ${
+                                !isActive ? "grayscale opacity-60" : ""
+                              }`}
                             />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-light-indigo text-primary flex items-center justify-center font-bold text-sm">
@@ -283,32 +398,49 @@ function Members() {
                       </td>
 
                       <td className="px-5 py-4">
-                        <span
-                          className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${
-                            isAdmin
-                              ? "bg-light-indigo text-primary"
-                              : "bg-surface-hover text-text"
-                          }`}
-                        >
-                          {isAdmin && <FaCrown />}
-                          {isAdmin ? t("admin") : t("member")}
-                        </span>
+                        {isActive ? (
+                          <span
+                            className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${
+                              isAdmin
+                                ? "bg-light-indigo text-primary"
+                                : "bg-surface-hover text-text"
+                            }`}
+                          >
+                            {isAdmin && <FaCrown />}
+                            {isAdmin ? t("admin") : t("member")}
+                          </span>
+                        ) : (
+                          <span className="inline-flex px-3 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-600">
+                            Removed
+                          </span>
+                        )}
                       </td>
 
-                      <td className="px-5 py-4 text-muted">—</td>
+                      <td className="px-5 py-4 text-muted">
+                        ৳{Number(totalPaid).toFixed(2)}
+                      </td>
 
-                      <td className="px-5 py-4 text-muted">—</td>
+                      <td className="px-5 py-4 text-muted">
+                        ৳{Number(totalShare).toFixed(2)}
+                      </td>
 
                       <td className="px-5 py-4">
-                        <button
-                          type="button"
-                          onClick={handleInvite}
-                          className="w-9 h-9 rounded-lg flex items-center justify-center text-muted hover:bg-surface-hover hover:text-heading transition"
-                          aria-label="Copy invite code"
-                          title="Copy invite code"
-                        >
-                          <FaEllipsisH />
-                        </button>
+                        {isOwner && isActive && !isAdmin && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveMember(memberId, name)}
+                            disabled={removingMemberId === memberId}
+                            className="w-9 h-9 rounded-lg flex items-center justify-center text-red-500 hover:bg-red-50 hover:text-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            aria-label={`Remove ${name}`}
+                            title="Remove member"
+                          >
+                            {removingMemberId === memberId ? (
+                              <span className="text-xs">...</span>
+                            ) : (
+                              <FaTrash />
+                            )}
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );

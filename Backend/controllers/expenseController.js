@@ -318,71 +318,111 @@ const getHouseholdBalances = async (req, res) => {
     // Get all household expenses
     const expenses = await Expense.find({
       household: householdId,
-    });
+    })
+      .populate("paidBy", "name email profileImage")
+      .populate("participants.user", "name email profileImage");
 
     // Get all household settlements
     const settlements = await Settlement.find({
       household: householdId,
+    })
+      .populate("paidBy", "name email profileImage")
+      .populate("receivedBy", "name email profileImage");
+
+    // Store all active and historical members
+    const memberMap = new Map();
+
+    const addMember = (user) => {
+      if (user && user._id) {
+        memberMap.set(user._id.toString(), user);
+      }
+    };
+
+    // Add current household members
+    household.members.forEach((member) => {
+      addMember(member.user);
     });
 
-    // Calculate member balances
-    const balances = household.members
-      .filter((member) => member.user !== null)
-      .map((member) => {
-        const user = member.user;
+    // Add members from old expenses
+    expenses.forEach((expense) => {
+      addMember(expense.paidBy);
 
-        let totalPaid = 0;
-        let totalShare = 0;
-
-        expenses.forEach((expense) => {
-          // Calculate total amount paid by this member
-          if (expense.paidBy.toString() === user._id.toString()) {
-            totalPaid += expense.amount;
-          }
-
-          // Calculate total share of this member
-          expense.participants.forEach((participant) => {
-            if (
-              participant.user &&
-              participant.user.toString() === user._id.toString()
-            ) {
-              totalShare += participant.shareAmount;
-            }
-          });
-        });
-
-        // Calculate final balance
-        // Calculate expense balance
-        let balance = totalPaid - totalShare;
-
-        // Adjust balance using settlements
-        settlements.forEach((settlement) => {
-          // Person who paid gets a positive adjustment
-          if (settlement.paidBy.toString() === user._id.toString()) {
-            balance += settlement.amount;
-          }
-
-          // Person who received gets a negative adjustment
-          if (settlement.receivedBy.toString() === user._id.toString()) {
-            balance -= settlement.amount;
-          }
-        });
-
-        // Final balance
-        balance = Number(balance.toFixed(2));
-
-        return {
-          user: {
-            _id: user._id,
-            name: user.name,
-            email: user.email,
-            profileImage: user.profileImage,
-          },
-          totalPaid: Number(totalPaid.toFixed(2)),
-          totalShare: Number(totalShare.toFixed(2)),
-          balance,
-        };
+      expense.participants.forEach((participant) => {
+        addMember(participant.user);
       });
+    });
+
+    // Add members from old settlements
+    settlements.forEach((settlement) => {
+      addMember(settlement.paidBy);
+      addMember(settlement.receivedBy);
+    });
+
+    // Get active member IDs
+    const activeMemberIds = new Set(
+      household.members
+        .filter((member) => member.user)
+        .map((member) => member.user._id.toString()),
+    );
+
+    // Calculate balances
+    const balances = Array.from(memberMap.values()).map((user) => {
+      let totalPaid = 0;
+      let totalShare = 0;
+
+      expenses.forEach((expense) => {
+        // Total amount paid
+        if (
+          expense.paidBy &&
+          expense.paidBy._id.toString() === user._id.toString()
+        ) {
+          totalPaid += expense.amount;
+        }
+
+        // Total share
+        expense.participants.forEach((participant) => {
+          if (
+            participant.user &&
+            participant.user._id.toString() === user._id.toString()
+          ) {
+            totalShare += participant.shareAmount;
+          }
+        });
+      });
+
+      // Expense balance
+      let balance = totalPaid - totalShare;
+
+      // Adjust balance using settlements
+      settlements.forEach((settlement) => {
+        if (
+          settlement.paidBy &&
+          settlement.paidBy._id.toString() === user._id.toString()
+        ) {
+          balance += settlement.amount;
+        }
+
+        if (
+          settlement.receivedBy &&
+          settlement.receivedBy._id.toString() === user._id.toString()
+        ) {
+          balance -= settlement.amount;
+        }
+      });
+
+      return {
+        user: {
+          _id: user._id,
+          name: user.name,
+          email: user.email,
+          profileImage: user.profileImage,
+        },
+        totalPaid: Number(totalPaid.toFixed(2)),
+        totalShare: Number(totalShare.toFixed(2)),
+        balance: Number(balance.toFixed(2)),
+        isActiveMember: activeMemberIds.has(user._id.toString()),
+      };
+    });
 
     res.status(200).json({
       success: true,
