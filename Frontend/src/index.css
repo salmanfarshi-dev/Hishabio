@@ -5,7 +5,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap");
 
 @import "tailwindcss";
-
+@custom-variant dark (&:where(.dark, .dark *));
 /* ====================
    Hishabio Color System
    ==================== */
@@ -43,6 +43,33 @@
   --font-bangla: "Hind Siliguri", sans-serif;
 }
 
+/* ====================
+   Dark Theme
+   ==================== */
+
+html.dark {
+  color-scheme: dark;
+
+  --background: #0f172a;
+  --surface: #1e293b;
+  --surface-hover: #334155;
+
+  --heading: #f8fafc;
+  --text: #cbd5e1;
+  --muted: #94a3b8;
+
+  --border: #334155;
+  --light-indigo: #312e81;
+
+  --primary: #818cf8;
+  --primary-hover: #6366f1;
+  --secondary: #a78bfa;
+  --accent: #60a5fa;
+}
+
+html:not(.dark) {
+  color-scheme: light;
+}
 /* ====================
    Tailwind Custom Theme
    ==================== */

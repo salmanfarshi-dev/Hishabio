@@ -1,26 +1,13 @@
 import { Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-
-// ====================
-// Public Pages
-// ====================
-
+import { ThemeProvider } from "./context/ThemeContext";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
 import VerifyEmail from "./pages/VerifyEmail";
-
-// ====================
-// Household Page
-// ====================
-
+import ResetPassword from "./pages/ResetPassword";
 import HouseholdSetup from "./pages/HouseholdSetup";
-
-// ====================
-// Dashboard Pages
-// ====================
-
 import Dashboard from "./pages/Dashboard";
 import Expenses from "./pages/Expenses";
 import AddExpense from "./pages/AddExpense";
@@ -31,33 +18,25 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Profile from "./pages/Profile";
 import EditExpense from "./pages/EditExpense";
-// ====================
-// Layout & Routes
-// ====================
-import ResetPassword from "./pages/ResetPassword";
+
 import DashboardLayout from "./layouts/DashboardLayout";
 import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
   return (
-    <>
+    <ThemeProvider>
       <Toaster position="top-right" />
 
       <Routes>
-        {/* ====================
-            Public Routes
-            ==================== */}
-
+        {/* Public Routes */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
-        {/* ====================
-            Protected Routes
-            ==================== */}
 
+        {/* Protected Routes */}
         <Route element={<ProtectedRoute />}>
           <Route path="/household-setup" element={<HouseholdSetup />} />
 
@@ -75,7 +54,7 @@ function App() {
           </Route>
         </Route>
       </Routes>
-    </>
+    </ThemeProvider>
   );
 }
 

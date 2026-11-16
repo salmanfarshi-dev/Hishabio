@@ -11,9 +11,13 @@ import {
   FaSignOutAlt,
   FaShieldAlt,
   FaCheckCircle,
+  FaSun,
+  FaMoon,
+  FaDesktop,
 } from "react-icons/fa";
 
 import { useLanguage } from "../context/LanguageContext";
+import { useTheme } from "../context/ThemeContext";
 import toast from "react-hot-toast";
 
 const defaultNotifications = {
@@ -32,17 +36,15 @@ const currencies = [
 
 function Settings() {
   const { language, setLanguage, t } = useLanguage();
+  const { theme, setTheme } = useTheme();
+
   const navigate = useNavigate();
 
   const [notifications, setNotifications] = useState(defaultNotifications);
-
   const [currency, setCurrency] = useState("BDT");
   const [saving, setSaving] = useState(false);
 
-  // =========================
   // Load Settings
-  // =========================
-
   useEffect(() => {
     try {
       const savedNotifications = localStorage.getItem("hishabio-notifications");
@@ -64,10 +66,7 @@ function Settings() {
     }
   }, []);
 
-  // =========================
   // Notification Toggle
-  // =========================
-
   const handleNotification = (name) => {
     setNotifications((previous) => ({
       ...previous,
@@ -75,10 +74,7 @@ function Settings() {
     }));
   };
 
-  // =========================
   // Save Settings
-  // =========================
-
   const handleSaveSettings = () => {
     try {
       setSaving(true);
@@ -97,17 +93,13 @@ function Settings() {
       );
     } catch (error) {
       console.error("Settings save error:", error);
-
       toast.error("Failed to save settings.");
     } finally {
       setSaving(false);
     }
   };
 
-  // =========================
   // Logout
-  // =========================
-
   const handleLogout = () => {
     const confirmed = window.confirm(
       language === "bn"
@@ -127,10 +119,7 @@ function Settings() {
     navigate("/login", { replace: true });
   };
 
-  // =========================
   // Notification Options
-  // =========================
-
   const notificationOptions = [
     {
       key: "expense",
@@ -154,14 +143,39 @@ function Settings() {
     },
   ];
 
-  // =========================
-  // UI
-  // =========================
+  const themeOptions = [
+    {
+      value: "light",
+      label: language === "bn" ? "লাইট মোড" : "Light Mode",
+      description:
+        language === "bn"
+          ? "উজ্জ্বল ও পরিষ্কার ডিজাইন"
+          : "Bright and clean appearance",
+      icon: FaSun,
+    },
+    {
+      value: "dark",
+      label: language === "bn" ? "ডার্ক মোড" : "Dark Mode",
+      description:
+        language === "bn"
+          ? "চোখের জন্য আরামদায়ক ডার্ক ডিজাইন"
+          : "Comfortable dark appearance",
+      icon: FaMoon,
+    },
+    {
+      value: "system",
+      label: language === "bn" ? "সিস্টেম ডিফল্ট" : "System Default",
+      description:
+        language === "bn"
+          ? "ডিভাইসের Theme অনুসরণ করবে"
+          : "Follows your device appearance",
+      icon: FaDesktop,
+    },
+  ];
 
   return (
     <div className="space-y-6">
       {/* Page Header */}
-
       <div>
         <h1 className="text-2xl sm:text-3xl font-heading font-bold text-heading">
           {t("settings")}
@@ -171,7 +185,6 @@ function Settings() {
       </div>
 
       {/* General Settings */}
-
       <div className="card p-5 sm:p-6 space-y-5">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-light-indigo flex items-center justify-center text-primary">
@@ -190,7 +203,6 @@ function Settings() {
         </div>
 
         {/* Language */}
-
         <div className="border-t border-border pt-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -214,8 +226,77 @@ function Settings() {
           </div>
         </div>
 
-        {/* Currency */}
+        {/* Theme */}
+        <div className="border-t border-border pt-5">
+          <div className="flex items-center gap-3 mb-4">
+            <FaMoon className="text-primary" />
 
+            <div>
+              <p className="font-semibold text-heading">
+                {language === "bn" ? "থিম সেটিংস" : "Appearance & Theme"}
+              </p>
+
+              <p className="text-xs text-muted">
+                {language === "bn"
+                  ? "তোমার পছন্দের ডিজাইন নির্বাচন করো"
+                  : "Choose your preferred appearance"}
+              </p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {themeOptions.map((item) => {
+              const Icon = item.icon;
+              const isActive = theme === item.value;
+
+              return (
+                <button
+                  key={item.value}
+                  type="button"
+                  onClick={() => setTheme(item.value)}
+                  aria-pressed={isActive}
+                  className={`relative flex flex-col items-center text-center gap-3 p-4 rounded-xl border-2 transition-all ${
+                    isActive
+                      ? "border-primary bg-light-indigo"
+                      : "border-border bg-surface hover:border-primary/50"
+                  }`}
+                >
+                  <div
+                    className={`w-11 h-11 rounded-xl flex items-center justify-center text-lg ${
+                      isActive
+                        ? "bg-primary text-white"
+                        : "bg-surface-hover text-muted"
+                    }`}
+                  >
+                    <Icon />
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-heading text-sm">
+                      {item.label}
+                    </p>
+
+                    <p className="text-xs text-muted mt-1">
+                      {item.description}
+                    </p>
+                  </div>
+
+                  {isActive && (
+                    <FaCheckCircle className="absolute top-3 right-3 text-primary" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          <p className="text-xs text-muted mt-3">
+            {language === "bn"
+              ? "Theme পরিবর্তন করলে সঙ্গে সঙ্গে কার্যকর হবে।"
+              : "Your theme preference is applied immediately."}
+          </p>
+        </div>
+
+        {/* Currency */}
         <div className="border-t border-border pt-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -253,7 +334,6 @@ function Settings() {
       </div>
 
       {/* Notification Settings */}
-
       <div className="card p-5 sm:p-6 space-y-5">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-light-indigo flex items-center justify-center text-primary">
@@ -303,7 +383,6 @@ function Settings() {
       </div>
 
       {/* Security Settings */}
-
       <div className="card p-5 sm:p-6">
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-light-indigo flex items-center justify-center text-primary">
@@ -345,7 +424,6 @@ function Settings() {
       </div>
 
       {/* Save Settings */}
-
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2 text-sm text-muted">
           <FaCheckCircle className="text-success" />
@@ -365,10 +443,9 @@ function Settings() {
       </div>
 
       {/* Danger Zone */}
-
-      <div className="card p-5 sm:p-6 border border-red-200">
+      <div className="card p-5 sm:p-6 border border-red-200 dark:border-red-900">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+          <div className="w-11 h-11 rounded-xl bg-red-50 dark:bg-red-950 text-red-600 flex items-center justify-center">
             <FaSignOutAlt />
           </div>
 
@@ -393,7 +470,7 @@ function Settings() {
           <button
             type="button"
             onClick={handleLogout}
-            className="px-5 py-2.5 rounded-xl bg-red-50 text-red-600 font-semibold hover:bg-red-100 transition"
+            className="px-5 py-2.5 rounded-xl bg-red-50 dark:bg-red-950 text-red-600 font-semibold hover:bg-red-100 dark:hover:bg-red-900 transition"
           >
             <span className="flex items-center gap-2">
               <FaSignOutAlt />

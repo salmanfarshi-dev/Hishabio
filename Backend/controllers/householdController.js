@@ -1,6 +1,7 @@
-
 const Household = require("../models/Household");
+const User = require("../models/User");
 const crypto = require("crypto");
+const createNotification = require("../utils/createNotification");
 
 // ====================
 // Create Household
@@ -117,6 +118,15 @@ const joinHousehold = async (req, res) => {
 
     await household.save();
 
+    await createNotification({
+      household,
+      senderId: req.user.id,
+      title: "New Member Joined",
+      message: `A new member joined ${household.name}.`,
+      type: "member_joined",
+      relatedId: household._id,
+    });
+
     res.status(200).json({
       success: true,
       message: "Joined household successfully",
@@ -187,15 +197,14 @@ const removeHouseholdMember = async (req, res) => {
       (member) => member.user.toString() === req.user.id
     );
 
-   const isOwner =
-  household.createdBy.toString() === req.user.id;
+    const isOwner = household.createdBy.toString() === req.user.id;
 
-if (!isOwner || !currentMember || currentMember.role !== "admin") {
-  return res.status(403).json({
-    success: false,
-    message: "Only the household owner can remove members",
-  });
-}
+    if (!isOwner || !currentMember || currentMember.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Only the household owner can remove members",
+      });
+    }
 
     if (household.createdBy.toString() === memberId) {
       return res.status(400).json({
@@ -222,11 +231,25 @@ if (!isOwner || !currentMember || currentMember.role !== "admin") {
       });
     }
 
+    // Get removed member name
+    const removedMember = await User.findById(memberId).select("name");
+
+    // Remove member
     household.members = household.members.filter(
       (member) => member.user.toString() !== memberId
     );
 
     await household.save();
+
+    // Notify remaining members
+    await createNotification({
+      household,
+      senderId: req.user.id,
+      title: "Member Removed",
+      message: `${removedMember?.name || "A member"} was removed from ${household.name}.`,
+      type: "member_removed",
+      relatedId: household._id,
+    });
 
     res.status(200).json({
       success: true,
