@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { FaArrowLeft, FaEnvelope, FaLock, FaCheckCircle } from "react-icons/fa";
 import { useLanguage } from "../context/LanguageContext";
 import toast from "react-hot-toast";
-import axios from "axios";
+import API from "../api/axios";
 
 function ForgotPassword() {
   const { language, toggleLanguage, t } = useLanguage();
@@ -26,12 +26,9 @@ function ForgotPassword() {
     try {
       setLoading(true);
 
-      const response = await axios.post(
-        "http://localhost:5000/api/v1/auth/forgot-password",
-        {
-          email: email.trim(),
-        },
-      );
+      const response = await API.post("/auth/forgot-password", {
+        email: email.trim().toLowerCase(),
+      });
 
       toast.success(
         response.data.message ||
@@ -193,6 +190,7 @@ function ForgotPassword() {
               </p>
 
               <button
+                type="button"
                 onClick={() => setSubmitted(false)}
                 className="text-primary font-semibold hover:underline"
               >
