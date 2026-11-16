@@ -2,30 +2,24 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
 const cloudinary = require("../config/cloudinary");
 const { Readable } = require("stream");
 
 // ====================
-// Gmail Transporter
+// Resend Email Service
 // ====================
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // ====================
 // Send Email OTP
 // ====================
 
 const sendVerificationEmail = async (email, otp) => {
-  await transporter.sendMail({
-    from: `"Hishabio" <${process.env.EMAIL_USER}>`,
-    to: email,
+  const { data, error } = await resend.emails.send({
+    from: "Hishabio <onboarding@resend.dev>",
+    to: [email],
     subject: "Your Hishabio Verification Code",
 
     html: `
@@ -57,7 +51,6 @@ const sendVerificationEmail = async (email, otp) => {
                   overflow: hidden;
                 ">
 
-                <!-- Header -->
                 <tr>
                   <td align="center"
                     style="
@@ -90,7 +83,6 @@ const sendVerificationEmail = async (email, otp) => {
                   </td>
                 </tr>
 
-                <!-- Main Content -->
                 <tr>
                   <td style="padding: 40px 30px 25px;">
 
@@ -125,7 +117,6 @@ const sendVerificationEmail = async (email, otp) => {
                       your account registration.
                     </p>
 
-                    <!-- OTP Box -->
                     <table width="100%" cellpadding="0" cellspacing="0">
                       <tr>
                         <td align="center"
@@ -161,7 +152,6 @@ const sendVerificationEmail = async (email, otp) => {
                       </tr>
                     </table>
 
-                    <!-- Expiry Notice -->
                     <p style="
                       margin: 25px 0 10px;
                       color: #475569;
@@ -187,7 +177,6 @@ const sendVerificationEmail = async (email, otp) => {
                   </td>
                 </tr>
 
-                <!-- Footer -->
                 <tr>
                   <td style="
                     padding: 22px 25px;
@@ -228,6 +217,12 @@ const sendVerificationEmail = async (email, otp) => {
       </html>
     `,
   });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data;
 };
 
 // ====================
@@ -261,7 +256,6 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Check Existing User
     let user = await User.findOne({ email: normalizedEmail });
 
     if (user?.isVerified) {
@@ -271,21 +265,17 @@ const registerUser = async (req, res) => {
       });
     }
 
-    // Generate 6-digit OTP
     const otp = crypto.randomInt(100000, 1000000).toString();
 
-    // Hash Password and OTP
     const hashedPassword = await bcrypt.hash(password, 10);
     const hashedOtp = await bcrypt.hash(otp, 10);
 
     if (user) {
-      // Update existing unverified registration
       user.name = name.trim();
       user.password = hashedPassword;
       user.otpHash = hashedOtp;
       user.otpExpires = new Date(Date.now() + 5 * 60 * 1000);
     } else {
-      // Create new unverified user
       user = new User({
         name: name.trim(),
         email: normalizedEmail,
@@ -298,7 +288,6 @@ const registerUser = async (req, res) => {
 
     await user.save();
 
-    // Send OTP Email
     try {
       await sendVerificationEmail(normalizedEmail, otp);
     } catch (emailError) {
@@ -388,7 +377,6 @@ const verifyEmail = async (req, res) => {
       });
     }
 
-    // Activate Account
     user.isVerified = true;
     user.otpHash = undefined;
     user.otpExpires = undefined;
@@ -444,7 +432,6 @@ const loginUser = async (req, res) => {
       });
     }
 
-    // Block unverified accounts
     if (user.isVerified === false) {
       return res.status(403).json({
         success: false,
@@ -631,9 +618,8 @@ const updateProfileImage = async (req, res) => {
 };
 
 // ====================
-// Export Controllers
+// Forgot Password
 // ====================
-
 
 const forgotPassword = async (req, res) => {
   try {
@@ -650,7 +636,6 @@ const forgotPassword = async (req, res) => {
       email: email.toLowerCase().trim(),
     });
 
-    // একই response রাখলে email আছে কি না বোঝা যাবে না
     if (!user) {
       return res.status(200).json({
         success: true,
@@ -658,16 +643,13 @@ const forgotPassword = async (req, res) => {
       });
     }
 
-    // Generate reset token
     const resetToken = crypto.randomBytes(32).toString("hex");
 
-    // Save hashed token in database
     user.resetPasswordToken = crypto
       .createHash("sha256")
       .update(resetToken)
       .digest("hex");
 
-    // Token expires in 15 minutes
     user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
 
     await user.save({ validateBeforeSave: false });
@@ -675,10 +657,11 @@ const forgotPassword = async (req, res) => {
     const resetURL = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
     try {
-      await transporter.sendMail({
-        from: `"Hishabio" <${process.env.EMAIL_USER}>`,
-        to: user.email,
+      const { data, error } = await resend.emails.send({
+        from: "Hishabio <onboarding@resend.dev>",
+        to: [user.email],
         subject: "Hishabio - Reset Your Password",
+
         html: `
           <div style="font-family: Arial; padding: 25px; max-width: 500px; margin: auto;">
             <h2 style="color: #6366f1;">Hishabio</h2>
@@ -697,6 +680,10 @@ const forgotPassword = async (req, res) => {
         `,
       });
 
+      if (error) {
+        throw new Error(error.message);
+      }
+
       return res.status(200).json({
         success: true,
         message: "If the email exists, a reset link has been sent.",
@@ -704,7 +691,9 @@ const forgotPassword = async (req, res) => {
     } catch (emailError) {
       user.resetPasswordToken = undefined;
       user.resetPasswordExpires = undefined;
+
       await user.save({ validateBeforeSave: false });
+
       throw emailError;
     }
   } catch (error) {
@@ -717,6 +706,9 @@ const forgotPassword = async (req, res) => {
   }
 };
 
+// ====================
+// Reset Password
+// ====================
 
 const resetPassword = async (req, res) => {
   try {
@@ -730,10 +722,7 @@ const resetPassword = async (req, res) => {
       });
     }
 
-    const hashedToken = crypto
-      .createHash("sha256")
-      .update(token)
-      .digest("hex");
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
     const user = await User.findOne({
       resetPasswordToken: hashedToken,
@@ -749,7 +738,6 @@ const resetPassword = async (req, res) => {
 
     user.password = await bcrypt.hash(password, 10);
 
-    // Remove reset token after successful password change
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
 
@@ -769,12 +757,17 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// ====================
+// Export Controllers
+// ====================
+
 module.exports = {
   registerUser,
   verifyEmail,
   loginUser,
   getMe,
   updateProfile,
-  updateProfileImage,forgotPassword,
-resetPassword,
+  updateProfileImage,
+  forgotPassword,
+  resetPassword,
 };
