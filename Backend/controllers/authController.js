@@ -680,9 +680,14 @@ const forgotPassword = async (req, res) => {
         `,
       });
 
-      if (error) {
-        throw new Error(error.message);
-      }
+      console.log("Forgot Password Resend Response:", { data, error });
+
+if (error) {
+  console.error("Resend Email Error:", error);
+  throw new Error(error.message);
+}
+
+console.log("Password Reset Email Sent:", data);
 
       return res.status(200).json({
         success: true,
