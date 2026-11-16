@@ -4,7 +4,6 @@ const API = axios.create({
   baseURL: "https://hishabio-backend.onrender.com/api/v1",
 });
 
-// Request Interceptor
 API.interceptors.request.use(
   (config) => {
     const token =
@@ -20,7 +19,6 @@ API.interceptors.request.use(
   (error) => Promise.reject(error),
 );
 
-// Response Interceptor
 API.interceptors.response.use(
   (response) => response,
   (error) => {
