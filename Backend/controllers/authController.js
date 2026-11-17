@@ -2,25 +2,51 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const { Resend } = require("resend");
 const cloudinary = require("../config/cloudinary");
 const { Readable } = require("stream");
 
 // ====================
-// Resend Email Service
+// Google Apps Script Email Service
 // ====================
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const sendEmail = async ({ email, subject, html, message = "" }) => {
+  if (!process.env.GOOGLE_SCRIPT_URL || !process.env.GOOGLE_SCRIPT_SECRET) {
+    throw new Error("Google Email Service environment variables are missing");
+  }
+
+  const response = await fetch(process.env.GOOGLE_SCRIPT_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      secret: process.env.GOOGLE_SCRIPT_SECRET,
+      email,
+      subject,
+      message,
+      html,
+    }),
+    redirect: "follow",
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || !result.success) {
+    throw new Error(result.message || "Email sending failed");
+  }
+
+  return result;
+};
 
 // ====================
 // Send Email OTP
 // ====================
 
 const sendVerificationEmail = async (email, otp) => {
-  const { data, error } = await resend.emails.send({
-    from: "Hishabio <onboarding@resend.dev>",
-    to: [email],
+  await sendEmail({
+    email,
     subject: "Your Hishabio Verification Code",
+    message: `Your Hishabio verification code is ${otp}. It expires in 5 minutes.`,
 
     html: `
       <!DOCTYPE html>
@@ -72,11 +98,7 @@ const sendVerificationEmail = async (email, otp) => {
                       Hishabio
                     </div>
 
-                    <p style="
-                      margin: 15px 0 0;
-                      color: #e0e7ff;
-                      font-size: 14px;
-                    ">
+                    <p style="margin: 15px 0 0; color: #e0e7ff; font-size: 14px;">
                       Share Expenses. Simplify Life.
                     </p>
 
@@ -217,12 +239,6 @@ const sendVerificationEmail = async (email, otp) => {
       </html>
     `,
   });
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return data;
 };
 
 // ====================
@@ -657,10 +673,10 @@ const forgotPassword = async (req, res) => {
     const resetURL = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
     try {
-      const { data, error } = await resend.emails.send({
-        from: "Hishabio <onboarding@resend.dev>",
-        to: [user.email],
+      await sendEmail({
+        email: user.email,
         subject: "Hishabio - Reset Your Password",
+        message: `Reset your Hishabio password using this link: ${resetURL}`,
 
         html: `
           <div style="font-family: Arial; padding: 25px; max-width: 500px; margin: auto;">
@@ -679,15 +695,6 @@ const forgotPassword = async (req, res) => {
           </div>
         `,
       });
-
-      console.log("Forgot Password Resend Response:", { data, error });
-
-if (error) {
-  console.error("Resend Email Error:", error);
-  throw new Error(error.message);
-}
-
-console.log("Password Reset Email Sent:", data);
 
       return res.status(200).json({
         success: true,
