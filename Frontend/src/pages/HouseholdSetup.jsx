@@ -93,62 +93,65 @@ function HouseholdSetup() {
     navigate("/dashboard");
   };
 
+  // Common input styles
+  const inputStyle =
+    "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:border-slate-700 dark:bg-slate-800 dark:text-white dark:placeholder:text-slate-500 dark:focus:border-indigo-400 dark:focus:ring-indigo-500/20";
+
+  const labelStyle =
+    "mb-2 block text-sm font-semibold text-slate-700 dark:text-slate-300";
+
   return (
-    <div className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6">
+    <div className="min-h-screen bg-slate-50 px-4 py-10 transition-colors duration-300 dark:bg-slate-950 sm:px-6">
       <div className="mx-auto max-w-5xl">
-        {/* ====================
-            Header
-            ==================== */}
+        {/* Header */}
 
         <div className="mb-10 text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400">
             <FiHome size={30} />
           </div>
 
-          <h1 className="text-3xl font-bold text-slate-900 sm:text-4xl">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white sm:text-4xl">
             Welcome to Hishabio!
           </h1>
 
-          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-500 sm:text-base">
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-slate-500 dark:text-slate-400 sm:text-base">
             Create a new household or join an existing one to start managing
             shared expenses together.
           </p>
         </div>
 
         {createdHousehold ? (
-          /* ====================
-             Success Section
-             ==================== */
+          /* Success Section */
 
-          <div className="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-sm sm:p-10">
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600">
+          <div className="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white p-6 text-center shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900 sm:p-10">
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 text-green-600 dark:bg-green-500/15 dark:text-green-400">
               <FiHome size={30} />
             </div>
 
-            <h2 className="text-2xl font-bold text-slate-900">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
               You're all set!
             </h2>
 
-            <p className="mt-2 text-sm text-slate-500">
+            <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
               Your household is ready to use.
             </p>
 
-            <div className="mt-7 rounded-2xl bg-slate-50 p-5 text-left">
-              <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+            <div className="mt-7 rounded-2xl bg-slate-50 p-5 text-left dark:bg-slate-800">
+              <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 Household Name
               </p>
 
-              <h3 className="mt-1 text-lg font-bold text-slate-900">
+              <h3 className="mt-1 text-lg font-bold text-slate-900 dark:text-white">
                 {createdHousehold.name}
               </h3>
 
               <div className="mt-5">
-                <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+                <p className="text-xs font-medium uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Invite Code
                 </p>
 
-                <div className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-dashed border-indigo-300 bg-indigo-50 px-4 py-3">
-                  <span className="text-xl font-bold tracking-[0.2em] text-indigo-700">
+                <div className="mt-2 flex items-center justify-between gap-3 rounded-xl border border-dashed border-indigo-300 bg-indigo-50 px-4 py-3 dark:border-indigo-500/40 dark:bg-indigo-500/10">
+                  <span className="text-xl font-bold tracking-[0.2em] text-indigo-700 dark:text-indigo-300">
                     {createdHousehold.inviteCode}
                   </span>
 
@@ -160,7 +163,7 @@ function HouseholdSetup() {
                       );
                       toast.success("Invite code copied!");
                     }}
-                    className="text-sm font-semibold text-indigo-600 hover:text-indigo-800"
+                    className="text-sm font-semibold text-indigo-600 transition hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
                   >
                     Copy
                   </button>
@@ -178,18 +181,16 @@ function HouseholdSetup() {
           </div>
         ) : (
           <div className="mx-auto max-w-2xl">
-            {/* ====================
-                Tab Switcher
-                ==================== */}
+            {/* Tab Switcher */}
 
-            <div className="mb-6 grid grid-cols-2 gap-3 rounded-2xl border border-slate-200 bg-white p-2">
+            <div className="mb-6 grid grid-cols-2 gap-3 rounded-2xl border border-slate-200 bg-white p-2 dark:border-slate-800 dark:bg-slate-900">
               <button
                 type="button"
                 onClick={() => setActiveTab("create")}
                 className={`flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold transition ${
                   activeTab === "create"
                     ? "bg-indigo-600 text-white shadow-sm"
-                    : "text-slate-500 hover:bg-slate-50"
+                    : "text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
                 }`}
               >
                 <FiPlus />
@@ -202,7 +203,7 @@ function HouseholdSetup() {
                 className={`flex items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-semibold transition ${
                   activeTab === "join"
                     ? "bg-indigo-600 text-white shadow-sm"
-                    : "text-slate-500 hover:bg-slate-50"
+                    : "text-slate-500 hover:bg-slate-50 dark:text-slate-400 dark:hover:bg-slate-800"
                 }`}
               >
                 <FiUsers />
@@ -210,34 +211,30 @@ function HouseholdSetup() {
               </button>
             </div>
 
-            {/* ====================
-                Create Household Form
-                ==================== */}
+            {/* Create Household Form */}
 
             {activeTab === "create" && (
               <form
                 onSubmit={handleCreate}
-                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9"
+                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900 sm:p-9"
               >
                 <div className="mb-7">
-                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-100 text-indigo-600 dark:bg-indigo-500/15 dark:text-indigo-400">
                     <FiHome size={23} />
                   </div>
 
-                  <h2 className="text-2xl font-bold text-slate-900">
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                     Create a Household
                   </h2>
 
-                  <p className="mt-2 text-sm text-slate-500">
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                     Set up a shared space for managing your expenses.
                   </p>
                 </div>
 
                 <div className="space-y-5">
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
-                      Household Name
-                    </label>
+                    <label className={labelStyle}>Household Name</label>
 
                     <input
                       type="text"
@@ -249,15 +246,15 @@ function HouseholdSetup() {
                         })
                       }
                       placeholder="e.g. Friends Mess"
-                      className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                      className={inputStyle}
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-700">
+                    <label className={labelStyle}>
                       Description
-                      <span className="ml-1 font-normal text-slate-400">
+                      <span className="ml-1 font-normal text-slate-400 dark:text-slate-500">
                         (Optional)
                       </span>
                     </label>
@@ -272,13 +269,13 @@ function HouseholdSetup() {
                         })
                       }
                       placeholder="Tell us something about your household..."
-                      className="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                      className={`${inputStyle} resize-none`}
                     />
                   </div>
                 </div>
 
-                <div className="mt-6 rounded-xl bg-indigo-50 p-4">
-                  <p className="text-sm leading-6 text-indigo-700">
+                <div className="mt-6 rounded-xl bg-indigo-50 p-4 dark:bg-indigo-500/10">
+                  <p className="text-sm leading-6 text-indigo-700 dark:text-indigo-300">
                     <strong>Note:</strong> You'll automatically become the Admin
                     of this household. You can invite others using your
                     household invite code.
@@ -296,33 +293,29 @@ function HouseholdSetup() {
               </form>
             )}
 
-            {/* ====================
-                Join Household Form
-                ==================== */}
+            {/* Join Household Form */}
 
             {activeTab === "join" && (
               <form
                 onSubmit={handleJoin}
-                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-9"
+                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-colors dark:border-slate-800 dark:bg-slate-900 sm:p-9"
               >
                 <div className="mb-7">
-                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-purple-600">
+                  <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-purple-100 text-purple-600 dark:bg-purple-500/15 dark:text-purple-400">
                     <FiUsers size={23} />
                   </div>
 
-                  <h2 className="text-2xl font-bold text-slate-900">
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
                     Join a Household
                   </h2>
 
-                  <p className="mt-2 text-sm text-slate-500">
+                  <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
                     Enter the invite code shared by your household Admin.
                   </p>
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-700">
-                    Household Invite Code
-                  </label>
+                  <label className={labelStyle}>Household Invite Code</label>
 
                   <input
                     type="text"
@@ -331,13 +324,13 @@ function HouseholdSetup() {
                       setInviteCode(e.target.value.toUpperCase())
                     }
                     placeholder="Enter invite code"
-                    className="w-full rounded-xl border border-slate-200 px-4 py-3 text-center text-lg font-bold uppercase tracking-[0.2em] outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+                    className={`${inputStyle} text-center text-lg font-bold uppercase tracking-[0.2em]`}
                     required
                   />
                 </div>
 
-                <div className="mt-6 rounded-xl bg-purple-50 p-4">
-                  <p className="text-sm leading-6 text-purple-700">
+                <div className="mt-6 rounded-xl bg-purple-50 p-4 dark:bg-purple-500/10">
+                  <p className="text-sm leading-6 text-purple-700 dark:text-purple-300">
                     Make sure you enter the correct invite code. You will become
                     a Member after joining successfully.
                   </p>

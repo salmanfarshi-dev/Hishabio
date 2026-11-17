@@ -47,16 +47,13 @@ function Features() {
   ];
 
   return (
-    <section id="features" className="bg-surface py-24">
-
+    <section
+      id="features"
+      className="scroll-mt-20 bg-surface py-24"
+    >
       <div className="container-main">
-
-        {/* ====================
-             Section Heading
-             ==================== */}
-
+        {/* Section Heading */}
         <div className="mx-auto mb-16 max-w-2xl text-center">
-
           <span className="inline-block rounded-full bg-light-indigo px-4 py-2 text-sm font-semibold text-primary">
             {t("featureBadge")}
           </span>
@@ -71,15 +68,10 @@ function Features() {
           <p className="mt-5 leading-8 text-muted">
             {t("featureDescription")}
           </p>
-
         </div>
 
-        {/* ====================
-             Features Grid
-             ==================== */}
-
+        {/* Features Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-
           {features.map((feature) => {
             const Icon = feature.icon;
 
@@ -88,19 +80,12 @@ function Features() {
                 key={feature.title}
                 className="card group p-7 transition-all duration-300 hover:-translate-y-2 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5"
               >
-
-                {/* ====================
-                     Feature Icon
-                     ==================== */}
-
+                {/* Feature Icon */}
                 <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-light-indigo text-primary transition-all duration-300 group-hover:bg-primary group-hover:text-white">
                   <Icon size={23} />
                 </div>
 
-                {/* ====================
-                     Feature Content
-                     ==================== */}
-
+                {/* Feature Content */}
                 <h3 className="mt-6 font-heading text-xl font-bold text-heading">
                   {t(feature.title)}
                 </h3>
@@ -108,15 +93,11 @@ function Features() {
                 <p className="mt-3 text-sm leading-7 text-muted">
                   {t(feature.description)}
                 </p>
-
               </div>
             );
           })}
-
         </div>
-
       </div>
-
     </section>
   );
 }

@@ -101,6 +101,43 @@ html:not(.dark) {
   --font-bangla: "Hind Siliguri", sans-serif;
 }
 
+/* Authentication Pages - Always Light Mode */
+
+.auth-page {
+  color-scheme: light;
+
+  --background: #f4f6fc;
+  --surface: #ffffff;
+  --surface-hover: #f1f5f9;
+
+  --heading: #171b35;
+  --text: #475569;
+  --muted: #64748b;
+
+  --border: #e2e8f0;
+  --light-indigo: #eef2ff;
+
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  --secondary: #7c3aed;
+  --accent: #3b82f6;
+}
+
+.auth-page h1,
+.auth-page h2,
+.auth-page h3,
+.auth-page h4,
+.auth-page h5,
+.auth-page h6 {
+  color: #171b35;
+}
+
+.auth-page input,
+.auth-page textarea,
+.auth-page select {
+  color-scheme: light;
+}
+
 /* ====================
    Global Styles
    ==================== */

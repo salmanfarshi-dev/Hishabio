@@ -57,10 +57,8 @@ const handleLogout = () => {
             ==================== */}
 
         <div className="h-20 px-6 flex items-center justify-between border-b border-border">
-          <Link to="/dashboard">
-            <h1 className="text-2xl font-heading font-extrabold text-primary">
-              Hishabio.
-            </h1>
+          <Link to="/dashboard" className="flex w-32 shrink-0 items-center sm:w-40 lg:w-44 ">
+            <img src="/Hishabio Logo.png" alt="Hishabio brand logo" className="h-auto max-h-14 w-full object-contain"/>
           </Link>
 
           <button
