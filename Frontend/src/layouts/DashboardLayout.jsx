@@ -74,6 +74,7 @@ function DashboardLayout() {
 
       <main className="min-h-screen lg:ml-[260px]">
         <header className="h-20 bg-surface border-b border-border px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30">
+          {/* Left Side */}
           <div className="flex items-center gap-4">
             <button
               onClick={() => setIsOpen(true)}
@@ -93,42 +94,47 @@ function DashboardLayout() {
             </div>
           </div>
 
+          {/* Right Side */}
           <div className="flex items-center gap-3 sm:gap-5">
+            {/* Language Toggle - Desktop Only */}
             <button
               onClick={toggleLanguage}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm font-semibold text-heading hover:bg-light-indigo hover:text-primary transition"
+              className="hidden sm:flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm font-semibold text-heading hover:bg-light-indigo hover:text-primary transition"
             >
               <FaGlobe />
               {language === "en" ? "বাংলা" : "English"}
             </button>
 
+            {/* Notifications */}
             <NotificationDropdown />
 
-            <div className="hidden sm:flex items-center gap-3 pl-3 border-l border-border">
-              <Link to="/profile" className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-light-indigo text-primary flex items-center justify-center font-bold overflow-hidden">
-                  {user.profileImage ? (
-                    <img
-                      src={user.profileImage}
-                      alt={user.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    initials
-                  )}
-                </div>
+            {/* Profile - Mobile & Desktop */}
+            <Link
+              to="/profile"
+              className="flex items-center gap-3 sm:pl-3 sm:border-l sm:border-border"
+              title="My Profile"
+            >
+              <div className="w-10 h-10 rounded-full bg-light-indigo text-primary flex items-center justify-center font-bold overflow-hidden shrink-0">
+                {user.profileImage ? (
+                  <img
+                    src={user.profileImage}
+                    alt={user.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  initials
+                )}
+              </div>
 
-                <div className="hidden sm:block">
-                  <p className="text-sm font-semibold text-heading">
-                    {user.name || "User"}
-                  </p>
+              {/* User Information - Desktop Only */}
+              <div className="hidden sm:block">
+                <p className="text-sm font-semibold text-heading">
+                  {user.name || "User"}
+                </p>
 
-                  <p className="text-xs text-muted capitalize">
-                    {householdRole}
-                  </p>
-                </div>
-              </Link>
-            </div>
+                <p className="text-xs text-muted capitalize">{householdRole}</p>
+              </div>
+            </Link>
           </div>
         </header>
 

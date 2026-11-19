@@ -37,7 +37,7 @@ function Navbar() {
           className="flex w-32 shrink-0 items-center sm:w-40 lg:w-44 "
         >
           <img
-            src="/Hishabio%20Logo.png"
+            src="/Hishabio Logo.png"
             alt="Hishabio brand logo"
             className="h-auto max-h-14 w-full object-contain"
           />
